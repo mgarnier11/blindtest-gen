@@ -122,6 +122,28 @@ const createMusicPart = (
     merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
   });
 
+const drawCountdownClock = (
+  context: CanvasRenderingContext2D,
+  thickness: number,
+  actualFrame: number,
+  frameCount: number
+) => {
+  const x = context.canvas.width / 2;
+  const y = context.canvas.height / 2;
+
+  const radius = 400;
+
+  const startAngle = -Math.PI / 2;
+  const endAngle = (actualFrame / frameCount) * Math.PI * 2 - Math.PI / 2;
+
+  context.beginPath();
+  context.arc(x, y, radius, startAngle, endAngle, true);
+  context.lineWidth = thickness;
+  context.strokeStyle = "#000000";
+  context.stroke();
+  context.closePath();
+};
+
 const createCountdownVideo = (duration: number) =>
   new Promise<string>(async (resolve, reject) => {
     const frameCount = duration * framerate;
@@ -150,8 +172,9 @@ const createCountdownVideo = (duration: number) =>
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        const text = (duration - time).toFixed(0);
+        drawCountdownClock(context, 10, i, frameCount);
 
+        const text = (duration - time).toFixed(0);
         context.font = "100px Caveat";
         context.fillStyle = "#000000";
         context.textAlign = "center";
@@ -263,10 +286,10 @@ const mergeAudioVideo = (audioPath: string, videoPath: string, outputPath: strin
 
 const parts = [];
 
-const partDuration = 40;
-const startPause = 1;
-const endPause = 3;
-const fading = 5;
+const partDuration = 20;
+const startPause = 0;
+const endPause = 5;
+const fading = 0;
 
 for (let i = 0; i < 3; i++) {
   console.log(`Creating part ${i}...`);
