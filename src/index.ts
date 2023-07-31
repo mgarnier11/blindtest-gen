@@ -8,12 +8,13 @@ import { fileURLToPath } from "url";
 import { searchMusics } from "node-youtube-music";
 import ytdl from "ytdl-core";
 import { Canvas, CanvasRenderingContext2D, registerFont } from "canvas";
+import { downloadMusics } from "./deezer/downloader.js";
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const assetsPath = path.join(__dirname, "../assets");
+// https://www.youtube.com/watch?v=3CtMFfm78Vw&ab_channel=Noctal
+
+const assetsPath = path.join(process.cwd(), "assets");
 
 if (!fs.existsSync("out/tmp")) fs.mkdirSync("out/tmp", { recursive: true });
 
@@ -23,301 +24,334 @@ ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 registerFont(`${assetsPath}/caveat-medium.ttf`, { family: "Caveat" });
 
-const musics = await searchMusics(`"Rolling in the Deep" - Adele`);
+// const musicTitles = [
+//   `"Halo" - Beyonce`,
+//   `"Without Me" - Halsey`,
+//   `"Rolling in the Deep" - Adele`,
+//   `"Shape of You" - Ed Sheeran`,
+//   `"Viva la Vida" - Coldplay`,
+//   `"Closer" - The Chainsmokers feat. Halsey`,
+//   `"Shape of My Heart" - Sting`,
+//   `"Hotline Bling" - Drake`,
+//   `"Bad Guy" - Billie Eilish`,
+//   `"Blurred Lines" - Robin Thicke`,
+// ];
+
+const musicTitles = [
+  `"Cheap Thrills" - Sia`,
+  `"Marry You" - Bruno Mars`,
+  `"Work" - Rihanna feat. Drake`,
+  `"Senorita" - Shawn Mendes, Camila Cabello`,
+  `"Stressed Out" - Twenty One Pilots`,
+  `"Someone You Loved" - Lewis Capaldi`,
+  `"Sugar" - Maroon 5`,
+  `"Party in the USA" - Miley Cyrus`,
+  `"Something Just Like This" - The Chainsmokers & Coldplay`,
+  `"Faded" - Alan Walker`,
+];
+
+// const musics = await downloadMusics(musicTitles);
+
+await downloadMusics(musicTitles);
+
+//// FROM HERE
+// const musics = await searchMusics(`"Rolling in the Deep" - Adele`);
+
+// console.log(musics[0], musics[0].artists);
+
+// const music = musics[0];
+
+// const url = `https://www.youtube.com/watch?v=${music.youtubeId}`;
+
+// const download = (url: string, outputPath: string) =>
+//   new Promise<void>((resolve, reject) => {
+//     ffmpeg(
+//       ytdl(url, {
+//         quality: "highestaudio",
+//       })
+//     )
+//       .audioBitrate(128)
+//       .save(outputPath)
+//       .on("end", () => resolve());
+//   });
+
+// const downloadPath = "out/tmp/music.mp3";
+
+// console.log("Downloading track...");
+
+// await download(url, downloadPath);
+
+// console.log("Track downloaded");
+
+// const framerate = 60;
+
+// const createPauseAudio = (duration: number) =>
+//   new Promise<string>((resolve, reject) => {
+//     const filename = `out/tmp/pause-${duration}.mp3`;
+
+//     if (fs.existsSync(filename)) {
+//       console.log(`Pause audio for ${duration} seconds already exists`);
+
+//       resolve(filename);
+//     } else {
+//       console.log(`Creating pause audio for ${duration} seconds...`);
+
+//       ffmpeg()
+//         .input("anullsrc=channel_layout=stereo:sample_rate=44100")
+//         .inputFormat("lavfi")
+//         .inputOptions([`-t ${duration}`])
+//         .saveToFile(filename)
+//         .on("end", () => resolve(filename));
+//     }
+//   });
+
+// const createFadedPart = (i: number, trackPath: string, fadeIn: number, fadeOut: number, duration: number) =>
+//   new Promise<string>((resolve, reject) => {
+//     const filename = `out/tmp/music-faded-${i}.mp3`;
+
+//     console.log(`Creating faded part ${i}...`);
+
+//     ffmpeg()
+//       .input(trackPath)
+//       .inputOptions([`-ss ${duration * i}`, `-t ${duration}`])
+//       .audioFilters([`afade=in:st=0:d=${fadeIn},afade=out:st=${duration - fadeOut}:d=${fadeOut}`])
+//       .saveToFile(filename)
+//       .on("end", () => resolve(filename));
+//   });
+
+// const createMusicPart = (
+//   trackPath: string,
+//   i: number,
+//   startDelay: number = 0,
+//   endDelay: number = 0,
+//   fadeIn: number = 0,
+//   fadeOut: number = 0,
+//   duration: number = 15
+// ) =>
+//   new Promise<string>(async (resolve, reject) => {
+//     const fadedPart = await createFadedPart(i, trackPath, fadeIn, fadeOut, duration);
 
-console.log(musics[0], musics[0].artists);
+//     const filename = `out/tmp/part-${i}.mp3`;
 
-const music = musics[0];
+//     console.log(`Merging audio for part ${i}...`);
 
-const url = `https://www.youtube.com/watch?v=${music.youtubeId}`;
+//     const merger = ffmpeg();
 
-const download = (url: string, outputPath: string) =>
-  new Promise<void>((resolve, reject) => {
-    ffmpeg(
-      ytdl(url, {
-        quality: "highestaudio",
-      })
-    )
-      .audioBitrate(128)
-      .save(outputPath)
-      .on("end", () => resolve());
-  });
+//     if (startDelay > 0) {
+//       const startPause = await createPauseAudio(startDelay);
 
-const downloadPath = "out/tmp/music.mp3";
+//       merger.input(startPause);
+//     }
 
-console.log("Downloading track...");
+//     merger.input(fadedPart);
 
-await download(url, downloadPath);
+//     if (endDelay > 0) {
+//       const endPause = await createPauseAudio(endDelay);
 
-console.log("Track downloaded");
+//       merger.input(endPause);
+//     }
 
-const framerate = 60;
+//     merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
+//   });
 
-const createPauseAudio = (duration: number) =>
-  new Promise<string>((resolve, reject) => {
-    const filename = `out/tmp/pause-${duration}.mp3`;
+// const drawCountdownClock = (
+//   context: CanvasRenderingContext2D,
+//   thickness: number,
+//   actualFrame: number,
+//   frameCount: number
+// ) => {
+//   const x = context.canvas.width / 2;
+//   const y = context.canvas.height / 2;
 
-    if (fs.existsSync(filename)) {
-      console.log(`Pause audio for ${duration} seconds already exists`);
+//   const radius = 400;
 
-      resolve(filename);
-    } else {
-      console.log(`Creating pause audio for ${duration} seconds...`);
+//   const startAngle = -Math.PI / 2;
+//   const endAngle = (actualFrame / frameCount) * Math.PI * 2 - Math.PI / 2;
 
-      ffmpeg()
-        .input("anullsrc=channel_layout=stereo:sample_rate=44100")
-        .inputFormat("lavfi")
-        .inputOptions([`-t ${duration}`])
-        .saveToFile(filename)
-        .on("end", () => resolve(filename));
-    }
-  });
+//   context.beginPath();
+//   context.arc(x, y, radius, startAngle, endAngle, true);
+//   context.lineWidth = thickness;
+//   context.strokeStyle = "#000000";
+//   context.stroke();
+//   context.closePath();
+// };
+
+// const createCountdownVideo = (duration: number) =>
+//   new Promise<string>(async (resolve, reject) => {
+//     const frameCount = duration * framerate;
+
+//     const dir = `out/tmp/countdown-${duration}`;
+
+//     if (fs.existsSync(dir)) {
+//       console.log(`Video for countdown ${duration} already exists`);
+
+//       resolve(`${dir}/video.mp4`);
+//     } else {
+//       fs.mkdirSync(dir);
 
-const createFadedPart = (i: number, trackPath: string, fadeIn: number, fadeOut: number, duration: number) =>
-  new Promise<string>((resolve, reject) => {
-    const filename = `out/tmp/music-faded-${i}.mp3`;
+//       const filename = `${dir}/video.mp4`;
 
-    console.log(`Creating faded part ${i}...`);
+//       for (let i = 0; i < frameCount; i++) {
+//         const canvas = new Canvas(1920, 1080);
+//         const context = canvas.getContext("2d");
 
-    ffmpeg()
-      .input(trackPath)
-      .inputOptions([`-ss ${duration * i}`, `-t ${duration}`])
-      .audioFilters([`afade=in:st=0:d=${fadeIn},afade=out:st=${duration - fadeOut}:d=${fadeOut}`])
-      .saveToFile(filename)
-      .on("end", () => resolve(filename));
-  });
+//         const time = i / framerate;
 
-const createMusicPart = (
-  trackPath: string,
-  i: number,
-  startDelay: number = 0,
-  endDelay: number = 0,
-  fadeIn: number = 0,
-  fadeOut: number = 0,
-  duration: number = 15
-) =>
-  new Promise<string>(async (resolve, reject) => {
-    const fadedPart = await createFadedPart(i, trackPath, fadeIn, fadeOut, duration);
+//         console.log(`Rendering frame ${i} at ${time.toFixed(2)} seconds...`);
 
-    const filename = `out/tmp/part-${i}.mp3`;
-
-    console.log(`Merging audio for part ${i}...`);
+//         // Clear the canvas with a white background color. This is required as we are
+//         // reusing the canvas with every frame
+//         context.fillStyle = "#ffffff";
+//         context.fillRect(0, 0, canvas.width, canvas.height);
 
-    const merger = ffmpeg();
+//         drawCountdownClock(context, 10, i, frameCount);
 
-    if (startDelay > 0) {
-      const startPause = await createPauseAudio(startDelay);
+//         const text = (duration - time).toFixed(0);
+//         context.font = "100px Caveat";
+//         context.fillStyle = "#000000";
+//         context.textAlign = "center";
+//         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
-      merger.input(startPause);
-    }
+//         // Store the image in the directory where it can be found by FFmpeg
+//         const output = canvas.toBuffer("image/png");
+//         const paddedNumber = String(i).padStart(6, "0");
+//         fs.writeFileSync(`${dir}/frame-${paddedNumber}.png`, output);
+//       }
 
-    merger.input(fadedPart);
+//       // Stitch all frames together with FFmpeg
+//       ffmpeg()
+//         .input(`${dir}/frame-%06d.png`)
+//         .inputOptions([`-framerate ${framerate}`])
+//         .videoCodec("libx264")
+//         .outputOptions(["-pix_fmt yuv420p"])
+//         .fps(framerate)
+//         .saveToFile(`${dir}/video.mp4`)
+//         .on("end", () => resolve(filename));
+//     }
+//   });
 
-    if (endDelay > 0) {
-      const endPause = await createPauseAudio(endDelay);
+// const createPauseVideo = (duration: number, text: string = "") =>
+//   new Promise<string>(async (resolve, reject) => {
+//     const frameCount = duration * framerate;
 
-      merger.input(endPause);
-    }
+//     const dir = `out/tmp/pause-${duration}-${text}`;
 
-    merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
-  });
+//     if (fs.existsSync(dir)) {
+//       console.log(`Video for pause ${duration} already exists`);
+//       resolve(`${dir}/video.mp4`);
+//     } else {
+//       fs.mkdirSync(dir);
 
-const drawCountdownClock = (
-  context: CanvasRenderingContext2D,
-  thickness: number,
-  actualFrame: number,
-  frameCount: number
-) => {
-  const x = context.canvas.width / 2;
-  const y = context.canvas.height / 2;
-
-  const radius = 400;
-
-  const startAngle = -Math.PI / 2;
-  const endAngle = (actualFrame / frameCount) * Math.PI * 2 - Math.PI / 2;
-
-  context.beginPath();
-  context.arc(x, y, radius, startAngle, endAngle, true);
-  context.lineWidth = thickness;
-  context.strokeStyle = "#000000";
-  context.stroke();
-  context.closePath();
-};
-
-const createCountdownVideo = (duration: number) =>
-  new Promise<string>(async (resolve, reject) => {
-    const frameCount = duration * framerate;
-
-    const dir = `out/tmp/countdown-${duration}`;
-
-    if (fs.existsSync(dir)) {
-      console.log(`Video for countdown ${duration} already exists`);
-
-      resolve(`${dir}/video.mp4`);
-    } else {
-      fs.mkdirSync(dir);
-
-      const filename = `${dir}/video.mp4`;
-
-      for (let i = 0; i < frameCount; i++) {
-        const canvas = new Canvas(1920, 1080);
-        const context = canvas.getContext("2d");
-
-        const time = i / framerate;
-
-        console.log(`Rendering frame ${i} at ${time.toFixed(2)} seconds...`);
-
-        // Clear the canvas with a white background color. This is required as we are
-        // reusing the canvas with every frame
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-
-        drawCountdownClock(context, 10, i, frameCount);
-
-        const text = (duration - time).toFixed(0);
-        context.font = "100px Caveat";
-        context.fillStyle = "#000000";
-        context.textAlign = "center";
-        context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-        // Store the image in the directory where it can be found by FFmpeg
-        const output = canvas.toBuffer("image/png");
-        const paddedNumber = String(i).padStart(6, "0");
-        fs.writeFileSync(`${dir}/frame-${paddedNumber}.png`, output);
-      }
-
-      // Stitch all frames together with FFmpeg
-      ffmpeg()
-        .input(`${dir}/frame-%06d.png`)
-        .inputOptions([`-framerate ${framerate}`])
-        .videoCodec("libx264")
-        .outputOptions(["-pix_fmt yuv420p"])
-        .fps(framerate)
-        .saveToFile(`${dir}/video.mp4`)
-        .on("end", () => resolve(filename));
-    }
-  });
-
-const createPauseVideo = (duration: number, text: string = "") =>
-  new Promise<string>(async (resolve, reject) => {
-    const frameCount = duration * framerate;
+//       const filename = `${dir}/video.mp4`;
 
-    const dir = `out/tmp/pause-${duration}-${text}`;
+//       for (let i = 0; i < frameCount; i++) {
+//         const canvas = new Canvas(1920, 1080);
+//         const context = canvas.getContext("2d");
 
-    if (fs.existsSync(dir)) {
-      console.log(`Video for pause ${duration} already exists`);
-      resolve(`${dir}/video.mp4`);
-    } else {
-      fs.mkdirSync(dir);
+//         const time = i / framerate;
 
-      const filename = `${dir}/video.mp4`;
+//         console.log(`Rendering frame ${i} at ${time.toFixed(2)} seconds...`);
 
-      for (let i = 0; i < frameCount; i++) {
-        const canvas = new Canvas(1920, 1080);
-        const context = canvas.getContext("2d");
+//         // Clear the canvas with a white background color. This is required as we are
+//         // reusing the canvas with every frame
+//         context.fillStyle = "#ffffff";
+//         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        const time = i / framerate;
+//         context.font = "100px Caveat";
+//         context.fillStyle = "#000000";
+//         context.textAlign = "center";
+//         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
-        console.log(`Rendering frame ${i} at ${time.toFixed(2)} seconds...`);
+//         // Store the image in the directory where it can be found by FFmpeg
+//         const output = canvas.toBuffer("image/png");
+//         const paddedNumber = String(i).padStart(6, "0");
+//         fs.writeFileSync(`${dir}/frame-${paddedNumber}.png`, output);
+//       }
 
-        // Clear the canvas with a white background color. This is required as we are
-        // reusing the canvas with every frame
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
+//       // Stitch all frames together with FFmpeg
+//       ffmpeg()
+//         .input(`${dir}/frame-%06d.png`)
+//         .inputOptions([`-framerate ${framerate}`])
+//         .videoCodec("libx264")
+//         .outputOptions(["-pix_fmt yuv420p"])
+//         .fps(framerate)
+//         .saveToFile(`${dir}/video.mp4`)
+//         .on("end", () => resolve(filename));
+//     }
+//   });
 
-        context.font = "100px Caveat";
-        context.fillStyle = "#000000";
-        context.textAlign = "center";
-        context.fillText(text, canvas.width / 2, canvas.height / 2);
+// const createVideoPart = (duration: number, startDelay: number = 0, endDelay: number = 0) =>
+//   new Promise<string>(async (resolve, reject) => {
+//     const countdown = await createCountdownVideo(duration);
 
-        // Store the image in the directory where it can be found by FFmpeg
-        const output = canvas.toBuffer("image/png");
-        const paddedNumber = String(i).padStart(6, "0");
-        fs.writeFileSync(`${dir}/frame-${paddedNumber}.png`, output);
-      }
+//     const filename = `out/tmp/part-${duration}.mp4`;
 
-      // Stitch all frames together with FFmpeg
-      ffmpeg()
-        .input(`${dir}/frame-%06d.png`)
-        .inputOptions([`-framerate ${framerate}`])
-        .videoCodec("libx264")
-        .outputOptions(["-pix_fmt yuv420p"])
-        .fps(framerate)
-        .saveToFile(`${dir}/video.mp4`)
-        .on("end", () => resolve(filename));
-    }
-  });
+//     console.log(`Merging video for part ${duration}...`);
 
-const createVideoPart = (duration: number, startDelay: number = 0, endDelay: number = 0) =>
-  new Promise<string>(async (resolve, reject) => {
-    const countdown = await createCountdownVideo(duration);
+//     const merger = ffmpeg();
 
-    const filename = `out/tmp/part-${duration}.mp4`;
+//     if (startDelay > 0) {
+//       const startPause = await createPauseVideo(startDelay, "StartDelay");
 
-    console.log(`Merging video for part ${duration}...`);
+//       merger.input(startPause);
+//     }
 
-    const merger = ffmpeg();
+//     merger.input(countdown);
 
-    if (startDelay > 0) {
-      const startPause = await createPauseVideo(startDelay, "StartDelay");
+//     if (endDelay > 0) {
+//       const endPause = await createPauseVideo(endDelay, "EndDelay");
 
-      merger.input(startPause);
-    }
+//       merger.input(endPause);
+//     }
 
-    merger.input(countdown);
+//     merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
+//   });
 
-    if (endDelay > 0) {
-      const endPause = await createPauseVideo(endDelay, "EndDelay");
+// const mergeAudioVideo = (audioPath: string, videoPath: string, outputPath: string) =>
+//   new Promise<void>((resolve, reject) => {
+//     ffmpeg()
+//       .input(audioPath)
+//       .input(videoPath)
+//       .saveToFile(outputPath)
+//       .on("end", () => resolve());
+//   });
 
-      merger.input(endPause);
-    }
+// const parts = [];
 
-    merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
-  });
+// const partDuration = 20;
+// const startPause = 0;
+// const endPause = 5;
+// const fading = 0;
 
-const mergeAudioVideo = (audioPath: string, videoPath: string, outputPath: string) =>
-  new Promise<void>((resolve, reject) => {
-    ffmpeg()
-      .input(audioPath)
-      .input(videoPath)
-      .saveToFile(outputPath)
-      .on("end", () => resolve());
-  });
+// for (let i = 0; i < 3; i++) {
+//   console.log(`Creating part ${i}...`);
 
-const parts = [];
+//   const musicPath = await createMusicPart(downloadPath, i, startPause, endPause, fading, fading, partDuration);
 
-const partDuration = 20;
-const startPause = 0;
-const endPause = 5;
-const fading = 0;
+//   console.log(`Creating video for part ${i}...`);
 
-for (let i = 0; i < 3; i++) {
-  console.log(`Creating part ${i}...`);
+//   const videoPath = await createVideoPart(partDuration, startPause, endPause);
 
-  const musicPath = await createMusicPart(downloadPath, i, startPause, endPause, fading, fading, partDuration);
+//   console.log(`Merging audio and video for part ${i}...`);
 
-  console.log(`Creating video for part ${i}...`);
+//   const videoPartPath = `out/tmp/part-${i}.mp4`;
 
-  const videoPath = await createVideoPart(partDuration, startPause, endPause);
+//   await mergeAudioVideo(musicPath, videoPath, videoPartPath);
 
-  console.log(`Merging audio and video for part ${i}...`);
+//   parts.push(videoPartPath);
+// }
 
-  const videoPartPath = `out/tmp/part-${i}.mp4`;
+// console.log("Merging parts...");
 
-  await mergeAudioVideo(musicPath, videoPath, videoPartPath);
+// const merger = ffmpeg();
 
-  parts.push(videoPartPath);
-}
+// for (const part of parts) {
+//   merger.input(part);
+// }
 
-console.log("Merging parts...");
+// merger.mergeToFile("out/video.mp4", "out/tmp").on("end", () => console.log("Done!"));
 
-const merger = ffmpeg();
-
-for (const part of parts) {
-  merger.input(part);
-}
-
-merger.mergeToFile("out/video.mp4", "out/tmp").on("end", () => console.log("Done!"));
+//// TO HERE
 
 // // Render each frame
 // for (let i = 0; i < frameCount; i++) {

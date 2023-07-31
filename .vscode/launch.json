@@ -5,13 +5,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      //run the task named compile before debugging the dist/index.js file
-      //and keep the debugger active when programm ends
       "name": "Debug",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/dist/index.js",
+      "env": {
+        "NODE_OPTIONS": "--openssl-legacy-provider"
+      },
+      "args": ["--experimental-fetch"],
       "preLaunchTask": "Compile"
+    },
+    {
+      "name": "Attach to Process",
+      "type": "node",
+      "request": "attach",
+      "restart": true,
+      "port": 5858,
+      "outFiles": [],
+      "sourceMaps": true
     }
   ]
 }
