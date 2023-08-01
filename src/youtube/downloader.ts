@@ -4,6 +4,8 @@ import ytdl from "ytdl-core";
 import { Music } from "../utils/interfaces";
 import { searchArtists, searchMusics } from "node-youtube-music";
 
+//WIP may be fully repaced by deezer downloader
+
 const youtubeUrl = "https://www.youtube.com/watch?v=";
 const musicsPath = "musics";
 
@@ -26,7 +28,7 @@ const download = (url: string, outputPath: string) =>
       });
   });
 
-const downloadMusic = async (musicTitle: string): Promise<Music> => {
+const downloadMusic = async (musicTitle: string): Promise<void> => {
   console.log(`Getting infos on ${musicTitle}...`);
 
   const name = musicTitle.split(`"`)[1].trim();
@@ -45,13 +47,13 @@ const downloadMusic = async (musicTitle: string): Promise<Music> => {
 
   if (!fs.existsSync(localPath)) await download(`${youtubeUrl}${youtubeMusic.youtubeId}`, `${musicsPath}/${fileName}`);
 
-  return {
-    name,
-    artist: artistName,
-    duration: youtubeMusic.duration?.totalSeconds || 0,
-    localPath,
-    thumbnailUrl: youtubeMusic.thumbnailUrl!,
-  };
+  // return {
+  //   name,
+  //   artist: artistName,
+  //   duration: youtubeMusic.duration?.totalSeconds || 0,
+  //   localPath,
+  //   thumbnailUrl: youtubeMusic.thumbnailUrl!,
+  // };
 };
 
 export const downloadMusics = async (musicTitles: string[]): Promise<Music[]> => {
@@ -60,8 +62,8 @@ export const downloadMusics = async (musicTitles: string[]): Promise<Music[]> =>
   console.log(`Downloading ${musicTitles.length} musics...`);
 
   for (const musicTitle of musicTitles) {
-    const music = await downloadMusic(musicTitle);
-    musics.push(music);
+    // const music = await downloadMusic(musicTitle);
+    // musics.push(music);
   }
 
   console.log(`Downloaded ${musicTitles.length} musics !`);

@@ -8,7 +8,10 @@ import { fileURLToPath } from "url";
 import { searchMusics } from "node-youtube-music";
 import ytdl from "ytdl-core";
 import { Canvas, CanvasRenderingContext2D, registerFont } from "canvas";
-import { downloadMusics } from "./deezer/downloader.js";
+import { downloadMusicRequests } from "./deezer/downloader.js";
+import { MusicRequest } from "./utils/interfaces.js";
+import { createTrack } from "./audio/api.js";
+import { createTrackVideo } from "./video/api.js";
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";
 
@@ -23,159 +26,146 @@ ffmpeg.setFfmpegPath(ffmpegStatic!);
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 registerFont(`${assetsPath}/caveat-medium.ttf`, { family: "Caveat" });
-
-// const musicTitles = [
-//   `"Halo" - Beyonce`,
-//   `"Without Me" - Halsey`,
-//   `"Rolling in the Deep" - Adele`,
-//   `"Shape of You" - Ed Sheeran`,
-//   `"Viva la Vida" - Coldplay`,
-//   `"Closer" - The Chainsmokers feat. Halsey`,
-//   `"Shape of My Heart" - Sting`,
-//   `"Hotline Bling" - Drake`,
-//   `"Bad Guy" - Billie Eilish`,
-//   `"Blurred Lines" - Robin Thicke`,
-// ];
-
-const musicTitles = [
-  `"Cheap Thrills" - Sia`,
-  `"Marry You" - Bruno Mars`,
-  `"Work" - Rihanna feat. Drake`,
-  `"Senorita" - Shawn Mendes, Camila Cabello`,
-  `"Stressed Out" - Twenty One Pilots`,
-  `"Someone You Loved" - Lewis Capaldi`,
-  `"Sugar" - Maroon 5`,
-  `"Party in the USA" - Miley Cyrus`,
-  `"Something Just Like This" - The Chainsmokers & Coldplay`,
-  `"Faded" - Alan Walker`,
+const requests: MusicRequest[] = [
+  {
+    title: "Bohemian Rhapsody",
+    artist: "Queen",
+    timestamp_start: 102,
+    timestamp_end: 122,
+  },
+  // {
+  //   title: "Imagine",
+  //   artist: "John Lennon",
+  //   timestamp_start: 60,
+  //   timestamp_end: 80,
+  // },
+  // {
+  //   title: "Hotel California",
+  //   artist: "The Eagles",
+  //   timestamp_start: 130,
+  //   timestamp_end: 150,
+  // },
+  // {
+  //   title: "Like a Rolling Stone",
+  //   artist: "Bob Dylan",
+  //   timestamp_start: 45,
+  //   timestamp_end: 65,
+  // },
+  // {
+  //   title: "Billie Jean",
+  //   artist: "Michael Jackson",
+  //   timestamp_start: 68,
+  //   timestamp_end: 88,
+  // },
+  // {
+  //   title: "Wonderwall",
+  //   artist: "Oasis",
+  //   timestamp_start: 90,
+  //   timestamp_end: 110,
+  // },
+  // {
+  //   title: "Sweet Child O' Mine",
+  //   artist: "Guns N' Roses",
+  //   timestamp_start: 105,
+  //   timestamp_end: 125,
+  // },
+  // {
+  //   title: "Thriller",
+  //   artist: "Michael Jackson",
+  //   timestamp_start: 78,
+  //   timestamp_end: 98,
+  // },
+  // {
+  //   title: "Hey Jude",
+  //   artist: "The Beatles",
+  //   timestamp_start: 125,
+  //   timestamp_end: 145,
+  // },
+  // {
+  //   title: "Smells Like Teen Spirit",
+  //   artist: "Nirvana",
+  //   timestamp_start: 60,
+  //   timestamp_end: 80,
+  // },
+  // {
+  //   title: "Rolling in the Deep",
+  //   artist: "Adele",
+  //   timestamp_start: 58,
+  //   timestamp_end: 78,
+  // },
+  // {
+  //   title: "Stairway to Heaven",
+  //   artist: "Led Zeppelin",
+  //   timestamp_start: 120,
+  //   timestamp_end: 140,
+  // },
+  // {
+  //   title: "Bad Guy",
+  //   artist: "Billie Eilish",
+  //   timestamp_start: 75,
+  //   timestamp_end: 95,
+  // },
+  // {
+  //   title: "Shape of You",
+  //   artist: "Ed Sheeran",
+  //   timestamp_start: 60,
+  //   timestamp_end: 80,
+  // },
+  // {
+  //   title: "Viva la Vida",
+  //   artist: "Coldplay",
+  //   timestamp_start: 80,
+  //   timestamp_end: 100,
+  // },
+  // {
+  //   title: "Livin' on a Prayer",
+  //   artist: "Bon Jovi",
+  //   timestamp_start: 85,
+  //   timestamp_end: 105,
+  // },
+  // {
+  //   title: "I Will Always Love You",
+  //   artist: "Whitney Houston",
+  //   timestamp_start: 110,
+  //   timestamp_end: 130,
+  // },
+  // {
+  //   title: "Uptown Funk",
+  //   artist: "Mark Ronson feat. Bruno Mars",
+  //   timestamp_start: 95,
+  //   timestamp_end: 115,
+  // },
+  // {
+  //   title: "Poker Face",
+  //   artist: "Lady Gaga",
+  //   timestamp_start: 50,
+  //   timestamp_end: 70,
+  // },
+  // {
+  //   title: "I Want to Hold Your Hand",
+  //   artist: "The Beatles",
+  //   timestamp_start: 45,
+  //   timestamp_end: 65,
+  // },
 ];
+const musics = await downloadMusicRequests(requests);
 
-// const musics = await downloadMusics(musicTitles);
+const fadeStart = 3;
+const fadeEnd = 5;
+const questionTime = 15;
+const answerTime = 10;
 
-await downloadMusics(musicTitles);
+for (const music of musics) {
+  // const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);
+
+  // console.log(`Track created: ${trackPath}`);
+
+  await createTrackVideo(music, answerTime, 1);
+}
+
+// console.log(musics);
 
 //// FROM HERE
-// const musics = await searchMusics(`"Rolling in the Deep" - Adele`);
-
-// console.log(musics[0], musics[0].artists);
-
-// const music = musics[0];
-
-// const url = `https://www.youtube.com/watch?v=${music.youtubeId}`;
-
-// const download = (url: string, outputPath: string) =>
-//   new Promise<void>((resolve, reject) => {
-//     ffmpeg(
-//       ytdl(url, {
-//         quality: "highestaudio",
-//       })
-//     )
-//       .audioBitrate(128)
-//       .save(outputPath)
-//       .on("end", () => resolve());
-//   });
-
-// const downloadPath = "out/tmp/music.mp3";
-
-// console.log("Downloading track...");
-
-// await download(url, downloadPath);
-
-// console.log("Track downloaded");
-
-// const framerate = 60;
-
-// const createPauseAudio = (duration: number) =>
-//   new Promise<string>((resolve, reject) => {
-//     const filename = `out/tmp/pause-${duration}.mp3`;
-
-//     if (fs.existsSync(filename)) {
-//       console.log(`Pause audio for ${duration} seconds already exists`);
-
-//       resolve(filename);
-//     } else {
-//       console.log(`Creating pause audio for ${duration} seconds...`);
-
-//       ffmpeg()
-//         .input("anullsrc=channel_layout=stereo:sample_rate=44100")
-//         .inputFormat("lavfi")
-//         .inputOptions([`-t ${duration}`])
-//         .saveToFile(filename)
-//         .on("end", () => resolve(filename));
-//     }
-//   });
-
-// const createFadedPart = (i: number, trackPath: string, fadeIn: number, fadeOut: number, duration: number) =>
-//   new Promise<string>((resolve, reject) => {
-//     const filename = `out/tmp/music-faded-${i}.mp3`;
-
-//     console.log(`Creating faded part ${i}...`);
-
-//     ffmpeg()
-//       .input(trackPath)
-//       .inputOptions([`-ss ${duration * i}`, `-t ${duration}`])
-//       .audioFilters([`afade=in:st=0:d=${fadeIn},afade=out:st=${duration - fadeOut}:d=${fadeOut}`])
-//       .saveToFile(filename)
-//       .on("end", () => resolve(filename));
-//   });
-
-// const createMusicPart = (
-//   trackPath: string,
-//   i: number,
-//   startDelay: number = 0,
-//   endDelay: number = 0,
-//   fadeIn: number = 0,
-//   fadeOut: number = 0,
-//   duration: number = 15
-// ) =>
-//   new Promise<string>(async (resolve, reject) => {
-//     const fadedPart = await createFadedPart(i, trackPath, fadeIn, fadeOut, duration);
-
-//     const filename = `out/tmp/part-${i}.mp3`;
-
-//     console.log(`Merging audio for part ${i}...`);
-
-//     const merger = ffmpeg();
-
-//     if (startDelay > 0) {
-//       const startPause = await createPauseAudio(startDelay);
-
-//       merger.input(startPause);
-//     }
-
-//     merger.input(fadedPart);
-
-//     if (endDelay > 0) {
-//       const endPause = await createPauseAudio(endDelay);
-
-//       merger.input(endPause);
-//     }
-
-//     merger.mergeToFile(filename, "out/tmp").on("end", () => resolve(filename));
-//   });
-
-// const drawCountdownClock = (
-//   context: CanvasRenderingContext2D,
-//   thickness: number,
-//   actualFrame: number,
-//   frameCount: number
-// ) => {
-//   const x = context.canvas.width / 2;
-//   const y = context.canvas.height / 2;
-
-//   const radius = 400;
-
-//   const startAngle = -Math.PI / 2;
-//   const endAngle = (actualFrame / frameCount) * Math.PI * 2 - Math.PI / 2;
-
-//   context.beginPath();
-//   context.arc(x, y, radius, startAngle, endAngle, true);
-//   context.lineWidth = thickness;
-//   context.strokeStyle = "#000000";
-//   context.stroke();
-//   context.closePath();
-// };
-
 // const createCountdownVideo = (duration: number) =>
 //   new Promise<string>(async (resolve, reject) => {
 //     const frameCount = duration * framerate;
