@@ -20,3 +20,8 @@ export interface Music {
   extractStart: number;
   extractEnd: number;
 }
+
+export interface Point {
+  x: number;
+  y: number;
+}

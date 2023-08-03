@@ -11,164 +11,181 @@ import { Canvas, CanvasRenderingContext2D, registerFont } from "canvas";
 import { downloadMusicRequests } from "./deezer/downloader.js";
 import { MusicRequest } from "./utils/interfaces.js";
 import { Track } from "./track/track.js";
+import { Text } from "./track/components/text.js";
+import { Translate } from "./track/effects/translate.js";
+import { tmpDirPath } from "./utils/config.js";
+
+const text = new Text(100, 100, [new Translate("position.x", 300, 15, 30), new Translate("position.y", 500, 45, 30)]);
+
+for (let frame = 0; frame < 60; frame++) {
+  const canvas = new Canvas(1920, 1080);
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+
+  text.draw(context, frame, "Hello World");
+
+  const output = canvas.toBuffer("image/png");
+  const paddedNumber = String(frame).padStart(6, "0");
+  const imageFileName = `frame-${paddedNumber}.png`;
+  fs.writeFileSync(`${tmpDirPath}/${imageFileName}`, output);
+}
+
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";
 
 // https://www.youtube.com/watch?v=3CtMFfm78Vw&ab_channel=Noctal
 
-const assetsPath = path.join(process.cwd(), "assets");
+////FROM HERE
+// const assetsPath = path.join(process.cwd(), "assets");
 
-if (!fs.existsSync("out/tmp")) fs.mkdirSync("out/tmp", { recursive: true });
+// if (!fs.existsSync("out/tmp")) fs.mkdirSync("out/tmp", { recursive: true });
 
-// Tell fluent-ffmpeg where it can find FFmpeg
-ffmpeg.setFfmpegPath(ffmpegStatic!);
-ffmpeg.setFfprobePath(ffprobeStatic.path);
+// // Tell fluent-ffmpeg where it can find FFmpeg
+// ffmpeg.setFfmpegPath(ffmpegStatic!);
+// ffmpeg.setFfprobePath(ffprobeStatic.path);
 
-registerFont(`${assetsPath}/caveat-medium.ttf`, { family: "Caveat" });
-const requests: MusicRequest[] = [
-  {
-    title: "Bohemian Rhapsody",
-    artist: "Queen",
-    timestamp_start: 102,
-    timestamp_end: 103,
-  },
-  // {
-  //   title: "Imagine",
-  //   artist: "John Lennon",
-  //   timestamp_start: 60,
-  //   timestamp_end: 80,
-  // },
-  // {
-  //   title: "Hotel California",
-  //   artist: "The Eagles",
-  //   timestamp_start: 130,
-  //   timestamp_end: 150,
-  // },
-  // {
-  //   title: "Like a Rolling Stone",
-  //   artist: "Bob Dylan",
-  //   timestamp_start: 45,
-  //   timestamp_end: 65,
-  // },
-  // {
-  //   title: "Billie Jean",
-  //   artist: "Michael Jackson",
-  //   timestamp_start: 68,
-  //   timestamp_end: 88,
-  // },
-  // {
-  //   title: "Wonderwall",
-  //   artist: "Oasis",
-  //   timestamp_start: 90,
-  //   timestamp_end: 110,
-  // },
-  // {
-  //   title: "Sweet Child O' Mine",
-  //   artist: "Guns N' Roses",
-  //   timestamp_start: 105,
-  //   timestamp_end: 125,
-  // },
-  // {
-  //   title: "Thriller",
-  //   artist: "Michael Jackson",
-  //   timestamp_start: 78,
-  //   timestamp_end: 98,
-  // },
-  // {
-  //   title: "Hey Jude",
-  //   artist: "The Beatles",
-  //   timestamp_start: 125,
-  //   timestamp_end: 145,
-  // },
-  // {
-  //   title: "Smells Like Teen Spirit",
-  //   artist: "Nirvana",
-  //   timestamp_start: 60,
-  //   timestamp_end: 80,
-  // },
-  // {
-  //   title: "Rolling in the Deep",
-  //   artist: "Adele",
-  //   timestamp_start: 58,
-  //   timestamp_end: 78,
-  // },
-  // {
-  //   title: "Stairway to Heaven",
-  //   artist: "Led Zeppelin",
-  //   timestamp_start: 120,
-  //   timestamp_end: 140,
-  // },
-  // {
-  //   title: "Bad Guy",
-  //   artist: "Billie Eilish",
-  //   timestamp_start: 75,
-  //   timestamp_end: 95,
-  // },
-  // {
-  //   title: "Shape of You",
-  //   artist: "Ed Sheeran",
-  //   timestamp_start: 60,
-  //   timestamp_end: 80,
-  // },
-  // {
-  //   title: "Viva la Vida",
-  //   artist: "Coldplay",
-  //   timestamp_start: 80,
-  //   timestamp_end: 100,
-  // },
-  // {
-  //   title: "Livin' on a Prayer",
-  //   artist: "Bon Jovi",
-  //   timestamp_start: 85,
-  //   timestamp_end: 105,
-  // },
-  // {
-  //   title: "I Will Always Love You",
-  //   artist: "Whitney Houston",
-  //   timestamp_start: 110,
-  //   timestamp_end: 130,
-  // },
-  // {
-  //   title: "Uptown Funk",
-  //   artist: "Mark Ronson feat. Bruno Mars",
-  //   timestamp_start: 95,
-  //   timestamp_end: 115,
-  // },
-  // {
-  //   title: "Poker Face",
-  //   artist: "Lady Gaga",
-  //   timestamp_start: 50,
-  //   timestamp_end: 70,
-  // },
-  // {
-  //   title: "I Want to Hold Your Hand",
-  //   artist: "The Beatles",
-  //   timestamp_start: 45,
-  //   timestamp_end: 65,
-  // },
-];
-const musics = await downloadMusicRequests(requests);
+// registerFont(`${assetsPath}/caveat-medium.ttf`, { family: "Caveat" });
+// const requests: MusicRequest[] = [
+//   {
+//     title: "Bohemian Rhapsody",
+//     artist: "Queen",
+//     timestamp_start: 102,
+//     timestamp_end: 103,
+//   },
+//   // {
+//   //   title: "Imagine",
+//   //   artist: "John Lennon",
+//   //   timestamp_start: 60,
+//   //   timestamp_end: 80,
+//   // },
+//   // {
+//   //   title: "Hotel California",
+//   //   artist: "The Eagles",
+//   //   timestamp_start: 130,
+//   //   timestamp_end: 150,
+//   // },
+//   // {
+//   //   title: "Like a Rolling Stone",
+//   //   artist: "Bob Dylan",
+//   //   timestamp_start: 45,
+//   //   timestamp_end: 65,
+//   // },
+//   // {
+//   //   title: "Billie Jean",
+//   //   artist: "Michael Jackson",
+//   //   timestamp_start: 68,
+//   //   timestamp_end: 88,
+//   // },
+//   // {
+//   //   title: "Wonderwall",
+//   //   artist: "Oasis",
+//   //   timestamp_start: 90,
+//   //   timestamp_end: 110,
+//   // },
+//   // {
+//   //   title: "Sweet Child O' Mine",
+//   //   artist: "Guns N' Roses",
+//   //   timestamp_start: 105,
+//   //   timestamp_end: 125,
+//   // },
+//   // {
+//   //   title: "Thriller",
+//   //   artist: "Michael Jackson",
+//   //   timestamp_start: 78,
+//   //   timestamp_end: 98,
+//   // },
+//   // {
+//   //   title: "Hey Jude",
+//   //   artist: "The Beatles",
+//   //   timestamp_start: 125,
+//   //   timestamp_end: 145,
+//   // },
+//   // {
+//   //   title: "Smells Like Teen Spirit",
+//   //   artist: "Nirvana",
+//   //   timestamp_start: 60,
+//   //   timestamp_end: 80,
+//   // },
+//   // {
+//   //   title: "Rolling in the Deep",
+//   //   artist: "Adele",
+//   //   timestamp_start: 58,
+//   //   timestamp_end: 78,
+//   // },
+//   // {
+//   //   title: "Stairway to Heaven",
+//   //   artist: "Led Zeppelin",
+//   //   timestamp_start: 120,
+//   //   timestamp_end: 140,
+//   // },
+//   // {
+//   //   title: "Bad Guy",
+//   //   artist: "Billie Eilish",
+//   //   timestamp_start: 75,
+//   //   timestamp_end: 95,
+//   // },
+//   // {
+//   //   title: "Shape of You",
+//   //   artist: "Ed Sheeran",
+//   //   timestamp_start: 60,
+//   //   timestamp_end: 80,
+//   // },
+//   // {
+//   //   title: "Viva la Vida",
+//   //   artist: "Coldplay",
+//   //   timestamp_start: 80,
+//   //   timestamp_end: 100,
+//   // },
+//   // {
+//   //   title: "Livin' on a Prayer",
+//   //   artist: "Bon Jovi",
+//   //   timestamp_start: 85,
+//   //   timestamp_end: 105,
+//   // },
+//   // {
+//   //   title: "I Will Always Love You",
+//   //   artist: "Whitney Houston",
+//   //   timestamp_start: 110,
+//   //   timestamp_end: 130,
+//   // },
+//   // {
+//   //   title: "Uptown Funk",
+//   //   artist: "Mark Ronson feat. Bruno Mars",
+//   //   timestamp_start: 95,
+//   //   timestamp_end: 115,
+//   // },
+//   // {
+//   //   title: "Poker Face",
+//   //   artist: "Lady Gaga",
+//   //   timestamp_start: 50,
+//   //   timestamp_end: 70,
+//   // },
+//   // {
+//   //   title: "I Want to Hold Your Hand",
+//   //   artist: "The Beatles",
+//   //   timestamp_start: 45,
+//   //   timestamp_end: 65,
+//   // },
+// ];
+// const musics = await downloadMusicRequests(requests);
 
-const fadeStart = 3;
-const fadeEnd = 5;
-const questionTime = 15;
-const answerTime = 5;
+// const fadeStart = 3;
+// const fadeEnd = 5;
+// const questionTime = 15;
+// const answerTime = 5;
 
-const tracks: Track[] = [];
+// const tracks: Track[] = [];
 
-for (const music of musics) {
-  const track = new Track(music, answerTime, 1, fadeStart, fadeEnd);
+// for (const music of musics) {
+//   const track = new Track(music, answerTime, 1, fadeStart, fadeEnd);
 
-  await track.createTrack();
+//   await track.createTrack();
 
-  tracks.push(track);
-}
-
-// const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);
-
-// console.log(`Track created: ${trackPath}`);
-
-// console.log(musics);
+//   tracks.push(track);
+// }
+/// TO HERE
 
 //// FROM HERE
 // const createCountdownVideo = (duration: number) =>
