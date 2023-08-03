@@ -12,6 +12,7 @@ import { downloadMusicRequests } from "./deezer/downloader.js";
 import { MusicRequest } from "./utils/interfaces.js";
 import { createTrack } from "./audio/api.js";
 import { createTrackVideo } from "./video/api.js";
+import { Track } from "./track/track.js";
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";
 
@@ -155,13 +156,13 @@ const fadeEnd = 5;
 const questionTime = 15;
 const answerTime = 10;
 
-for (const music of musics) {
-  // const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);
+const tracks: Track[] = musics.map((music) => {
+  return new Track(music, answerTime, 1, fadeStart, fadeEnd);
+});
 
-  // console.log(`Track created: ${trackPath}`);
+// const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);
 
-  await createTrackVideo(music, answerTime, 1);
-}
+// console.log(`Track created: ${trackPath}`);
 
 // console.log(musics);
 
