@@ -156,9 +156,11 @@ const fadeEnd = 5;
 const questionTime = 15;
 const answerTime = 10;
 
-const tracks: Track[] = musics.map((music) => {
-  return new Track(music, answerTime, 1, fadeStart, fadeEnd);
-});
+const tracks: Track[] = musics.map((music) => new Track(music, answerTime, 1, fadeStart, fadeEnd));
+
+for (const track of tracks) {
+  await track.createTrack();
+}
 
 // const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);
 

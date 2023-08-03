@@ -28,5 +28,8 @@ export class Track {
     this.audioTrack = new AudioTrack(this.music, audioFadeStart, audioFadeEnd, this.answerTime, this.pauseTime);
   }
 
-  public async createTrack() {}
+  public async createTrack() {
+    const audioTrackPath = await this.audioTrack.createTrack();
+    const videoTrackPath = await this.videoTrack.createTrack();
+  }
 }

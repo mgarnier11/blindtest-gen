@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Music } from "../utils/interfaces.js";
-import { fadedDirPath } from "../utils/config.js";
+import { fadedDirPath, outDirPath, tmpDirPath, trackDirPath } from "../utils/config.js";
 import Ffmpeg from "fluent-ffmpeg";
 
 export class AudioTrack {
@@ -17,6 +17,11 @@ export class AudioTrack {
   private musicPath: string;
   private musicFileName: string;
 
+  private _trackPath: string;
+  public get trackPath(): string {
+    return this._trackPath;
+  }
+
   constructor(music: Music, fadeStart: number, fadeEnd: number, answerTime: number, pauseTime: number) {
     this.music = music;
     this.answerTime = answerTime;
@@ -29,6 +34,29 @@ export class AudioTrack {
 
     this.musicPath = music.localPath;
     this.musicFileName = path.basename(this.musicPath, ".mp3");
+
+    this._trackPath = path.join(trackDirPath, `${this.musicFileName}_track.mp3`);
+  }
+
+  public static createPauseAudio(duration: number) {
+    return new Promise<string>((resolve, reject) => {
+      const filename = path.join(tmpDirPath, `pause_${duration}.mp3`);
+
+      if (fs.existsSync(filename)) {
+        console.log(`Pause audio for ${duration} seconds already exists`);
+
+        resolve(filename);
+      } else {
+        console.log(`Creating pause audio for ${duration} seconds...`);
+
+        Ffmpeg()
+          .input("anullsrc=channel_layout=stereo:sample_rate=44100")
+          .inputFormat("lavfi")
+          .inputOptions([`-t ${duration}`])
+          .saveToFile(filename)
+          .on("end", () => resolve(filename));
+      }
+    });
   }
 
   private createFadedPart() {
@@ -53,6 +81,22 @@ export class AudioTrack {
   }
 
   public async createTrack(): Promise<string> {
-    const fadedPartPath = await this.createFadedPart();
+    return new Promise<string>(async (resolve, reject) => {
+      const fadedPartPath = await this.createFadedPart();
+
+      console.log(`Merging audio for track ${this.music.title}...`);
+
+      const merger = Ffmpeg();
+
+      merger.input(fadedPartPath);
+
+      if (this.pauseTime > 0) {
+        const pauseAudioPath = await AudioTrack.createPauseAudio(this.pauseTime);
+
+        merger.input(pauseAudioPath);
+      }
+
+      merger.mergeToFile(this.trackPath, tmpDirPath).on("end", () => resolve(this.trackPath));
+    });
   }
 }
