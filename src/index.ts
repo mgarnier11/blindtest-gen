@@ -10,8 +10,6 @@ import ytdl from "ytdl-core";
 import { Canvas, CanvasRenderingContext2D, registerFont } from "canvas";
 import { downloadMusicRequests } from "./deezer/downloader.js";
 import { MusicRequest } from "./utils/interfaces.js";
-import { createTrack } from "./audio/api.js";
-import { createTrackVideo } from "./video/api.js";
 import { Track } from "./track/track.js";
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";
@@ -32,7 +30,7 @@ const requests: MusicRequest[] = [
     title: "Bohemian Rhapsody",
     artist: "Queen",
     timestamp_start: 102,
-    timestamp_end: 122,
+    timestamp_end: 103,
   },
   // {
   //   title: "Imagine",
@@ -154,12 +152,16 @@ const musics = await downloadMusicRequests(requests);
 const fadeStart = 3;
 const fadeEnd = 5;
 const questionTime = 15;
-const answerTime = 10;
+const answerTime = 5;
 
-const tracks: Track[] = musics.map((music) => new Track(music, answerTime, 1, fadeStart, fadeEnd));
+const tracks: Track[] = [];
 
-for (const track of tracks) {
+for (const music of musics) {
+  const track = new Track(music, answerTime, 1, fadeStart, fadeEnd);
+
   await track.createTrack();
+
+  tracks.push(track);
 }
 
 // const trackPath = await createTrack(music, fadeStart, fadeEnd, answerTime, 1);

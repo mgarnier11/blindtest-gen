@@ -24,7 +24,7 @@ export class Track {
 
     this.questionTime = music.extractEnd - music.extractStart;
 
-    this.videoTrack = new VideoTrack(this.music, this.questionTime, this.answerTime);
+    this.videoTrack = new VideoTrack(this.music, this.answerTime, this.pauseTime);
     this.audioTrack = new AudioTrack(this.music, audioFadeStart, audioFadeEnd, this.answerTime, this.pauseTime);
   }
 
