@@ -24,3 +24,7 @@ export function setPropertyValue(object: any, propertyPath: string, value: any) 
   }
   currentObject[properties[properties.length - 1]] = value;
 }
+
+export function dumbDeepCopy(object: any) {
+  return JSON.parse(JSON.stringify(object));
+}

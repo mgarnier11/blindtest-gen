@@ -2,7 +2,6 @@ import fs from "fs";
 import readline from "readline";
 import ffmpegStatic from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
-import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import { fileURLToPath } from "url";
 import { searchMusics } from "node-youtube-music";
@@ -12,12 +11,35 @@ import { downloadMusicRequests } from "./deezer/downloader.js";
 import { MusicRequest } from "./utils/interfaces.js";
 import { Track } from "./track/track.js";
 import { Text } from "./track/components/text.js";
-import { Translate } from "./track/effects/translate.js";
-import { tmpDirPath } from "./utils/config.js";
+import { outDirPath, tmpDirPath } from "./utils/config.js";
+import { Transition } from "./track/effects/transition.js";
+import { ProgressBar } from "./track/components/progressBar.js";
+import Ffmpeg from "fluent-ffmpeg";
 
-const text = new Text(100, 100, [new Translate("position.x", 300, 15, 30), new Translate("position.y", 500, 45, 30)]);
+const text = new Text(
+  { x: -100, y: 400 },
+  [
+    new Transition("position.x", 300, 15, 30),
+    new Transition("position.x", 100, 30, 45),
+    new Transition("position.y", 800, 0, 60),
+    new Transition("position.y", 600, 60, 75),
+    new Transition("color.h", 360, 0, 75),
+  ],
+  {
+    type: "hsla",
+    h: 0,
+    s: 100,
+    l: 50,
+  }
+);
 
-for (let frame = 0; frame < 60; frame++) {
+const bar = new ProgressBar({ x: 100, y: 200 }, { height: 50, width: 200 }, 0, 60, [
+  new Transition("size.width", 500, 15, 30),
+  new Transition("size.width", 200, 30, 45),
+  new Transition("size.height", 200, 15, 60),
+]);
+
+for (let frame = 0; frame <= 75; frame++) {
   const canvas = new Canvas(1920, 1080);
   const context = canvas.getContext("2d");
 
@@ -25,12 +47,27 @@ for (let frame = 0; frame < 60; frame++) {
   context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
   text.draw(context, frame, "Hello World");
+  bar.draw(context, frame);
 
   const output = canvas.toBuffer("image/png");
   const paddedNumber = String(frame).padStart(6, "0");
   const imageFileName = `frame-${paddedNumber}.png`;
   fs.writeFileSync(`${tmpDirPath}/${imageFileName}`, output);
 }
+
+Ffmpeg.setFfmpegPath(ffmpegStatic!);
+Ffmpeg.setFfprobePath(ffprobeStatic.path);
+
+const framerate = 10;
+
+Ffmpeg()
+  .input(`${tmpDirPath}/frame-%06d.png`)
+  .inputOptions([`-framerate ${framerate}`])
+  .videoCodec("libx264")
+  .outputOptions(["-pix_fmt yuv420p"])
+  .fps(framerate)
+  .saveToFile(`${outDirPath}/test.mp4`)
+  .on("end", () => console.log("done"));
 
 // import { Canvas, CanvasRenderingContext2D, loadImage, registerFont } from "canvas";
 // import { stitchFramesToVideo } from "./utils/stitchFramesToVideo.js";

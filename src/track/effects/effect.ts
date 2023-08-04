@@ -1,3 +1,5 @@
+import { CanvasRenderingContext2D } from "canvas";
+
 export abstract class Effect {
-  public abstract apply(actualFrame: number, properties: any): any;
+  public abstract apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): any;
 }
