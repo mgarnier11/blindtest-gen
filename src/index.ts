@@ -15,38 +15,38 @@ import { outDirPath, tmpDirPath } from "./utils/config.js";
 import { Transition } from "./track/effects/transition.js";
 import { ProgressBar } from "./track/components/progressBar.js";
 import Ffmpeg from "fluent-ffmpeg";
+import { Switch } from "./track/effects/switch.js";
 
-const text = new Text(
-  { x: -100, y: 400 },
-  [
-    new Transition("position.x", 300, 15, 30),
-    new Transition("position.x", 100, 30, 45),
-    new Transition("position.y", 800, 0, 60),
-    new Transition("position.y", 600, 60, 75),
-    new Transition("color.h", 360, 0, 75),
-  ],
-  {
-    type: "hsla",
-    h: 0,
-    s: 100,
-    l: 50,
-  }
-);
+// const text = new Text(
+//   { x: -100, y: 400 },
+//   [
+//     new Transition("position.x", 300, 15, 30),
+//     new Transition("position.x", 100, 30, 45),
+//     new Transition("position.y", 800, 0, 60),
+//     new Transition("position.y", 600, 60, 75),
+//     new Transition("color.h", 360, 0, 75),
+//   ],
+//   {
+//     type: "hsla",
+//     h: 0,
+//     s: 100,
+//     l: 50,
+//   }
+// );
 
-const bar = new ProgressBar({ x: 100, y: 200 }, { height: 50, width: 200 }, 0, 60, [
-  new Transition("size.width", 500, 15, 30),
-  new Transition("size.width", 200, 30, 45),
-  new Transition("size.height", 200, 15, 60),
+const bar = new ProgressBar({ x: 100, y: 200 }, { height: 50, width: 500 }, 0, 120, [
+  new Transition("position.x", 400, 0, 45),
+  // new Transition("size.width", 100, 45, 120),
+  // new Switch("display", [5, 45]),
 ]);
 
-for (let frame = 0; frame <= 75; frame++) {
+for (let frame = 0; frame <= 150; frame++) {
   const canvas = new Canvas(1920, 1080);
   const context = canvas.getContext("2d");
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
-  text.draw(context, frame, "Hello World");
   bar.draw(context, frame);
 
   const output = canvas.toBuffer("image/png");

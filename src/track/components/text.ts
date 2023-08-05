@@ -1,5 +1,5 @@
 import { CanvasRenderingContext2D } from "canvas";
-import { Component } from "./component.js";
+import { Component, ComponentProperties } from "./component.js";
 import { Point } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
 import { dumbDeepCopy } from "../../utils/utils.js";
@@ -27,21 +27,22 @@ interface FontSettings {
   family: string;
 }
 
-interface TextProperties {
-  position: Point;
+type TextProperties = ComponentProperties & {
   color: TextColor;
   textAlign: CanvasTextAlign;
   fontSettings: FontSettings;
-}
+};
 
 export class Text extends Component {
   private _color: TextColor = { type: "rgba", r: 0, g: 0, b: 0 };
   private _textAlign: CanvasTextAlign = "left";
   private _fontSettings: FontSettings = { size: 100, family: "Arial" };
 
+  private _text: string = "";
+
   public override getProperties(): TextProperties {
     return dumbDeepCopy({
-      position: this.position,
+      ...super.getProperties(),
       color: this._color,
       textAlign: this._textAlign,
       fontSettings: this._fontSettings,
@@ -51,20 +52,28 @@ export class Text extends Component {
   public constructor(
     position: Point,
     effects: Effect[],
+    text?: string,
     color?: HSLAColor | RGBAColor,
     textAlign?: CanvasTextAlign,
     fontSettings?: FontSettings
   ) {
     super(position, effects);
+    if (text !== undefined) this._text = text;
     if (color !== undefined) this._color = color;
     if (textAlign !== undefined) this._textAlign = textAlign;
     if (fontSettings !== undefined) this._fontSettings = fontSettings;
   }
 
-  public override draw(context: CanvasRenderingContext2D, frame: number, text: string): void {
-    const updatedProperties = this.applyEffects(context, frame) as TextProperties;
+  public setText(text: string) {
+    this._text = text;
+  }
 
-    context.save();
+  public override drawComponent(
+    context: CanvasRenderingContext2D,
+    frame: number,
+    updatedProperties: TextProperties,
+    text?: string
+  ) {
     context.font = `${updatedProperties.fontSettings.size}px ${updatedProperties.fontSettings.family}`;
 
     if (updatedProperties.color.type === "hsla") {
@@ -89,7 +98,7 @@ export class Text extends Component {
       })`;
     }
     context.textAlign = updatedProperties.textAlign;
-    context.fillText(text, updatedProperties.position.x, updatedProperties.position.y);
-    context.restore();
+
+    context.fillText(text ? text : this._text, updatedProperties.position.x, updatedProperties.position.y);
   }
 }
