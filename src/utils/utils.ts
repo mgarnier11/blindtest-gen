@@ -22,9 +22,20 @@ export function setPropertyValue(object: any, propertyPath: string, value: any) 
   for (let i = 0; i < properties.length - 1; i++) {
     currentObject = currentObject[properties[i]];
   }
-  currentObject[properties[properties.length - 1]] = value;
+
+  if (typeof value === "object") {
+    currentObject[properties[properties.length - 1]] = dumbDeepCopy(value);
+  } else {
+    currentObject[properties[properties.length - 1]] = value;
+  }
 }
 
 export function dumbDeepCopy(object: any) {
   return JSON.parse(JSON.stringify(object));
 }
+
+export type AllPaths<T> = T extends object
+  ? {
+      [K in keyof T]-?: K extends string ? (T[K] extends object ? `${K}` | `${K}.${AllPaths<T[K]>}` : `${K}`) : never;
+    }[keyof T]
+  : "";

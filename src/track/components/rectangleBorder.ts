@@ -5,25 +5,29 @@ import { Effect } from "../effects/effect";
 import { Component, ComponentProperties } from "./component.js";
 import { CanvasUtils, Color, Corners } from "../canvasUtils.js";
 
-type RectangleProperties = ComponentProperties & {
+type RectangleBorderProperties = ComponentProperties & {
   size: Size;
+  width: number;
   corners: Corners;
 };
 
-export class Rectangle extends Component {
+export class RectangleBorder extends Component {
   private size: Size;
+  private width: number;
   private corners: Corners;
 
-  public constructor(position: Point, size: Size, effects: Effect[], color?: Color, corners?: Corners) {
+  public constructor(position: Point, size: Size, width: number, effects: Effect[], color?: Color, corners?: Corners) {
     super(position, effects, color);
     this.size = dumbDeepCopy(size);
+    this.width = width;
     this.corners = dumbDeepCopy(corners || { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 });
   }
 
-  public override getProperties(): RectangleProperties {
+  public override getProperties(): RectangleBorderProperties {
     return dumbDeepCopy({
       ...super.getProperties(),
       size: this.size,
+      width: this.width,
       corners: this.corners,
     });
   }
@@ -31,18 +35,25 @@ export class Rectangle extends Component {
   public override drawComponent(
     context: CanvasRenderingContext2D,
     frame: number,
-    updatedProperties: RectangleProperties
+    updatedProperties: RectangleBorderProperties
   ) {
-    CanvasUtils.drawRoundedRectangle(
+    CanvasUtils.drawRoundedRectangleBorder(
       context,
-      updatedProperties.position,
-      updatedProperties.size,
+      {
+        x: updatedProperties.position.x + updatedProperties.width / 2,
+        y: updatedProperties.position.y + updatedProperties.width / 2,
+      },
+      {
+        width: updatedProperties.size.width - updatedProperties.width,
+        height: updatedProperties.size.height - updatedProperties.width,
+      },
       CanvasUtils.getColorString(updatedProperties.color),
-      updatedProperties.corners
+      updatedProperties.corners,
+      updatedProperties.width
     );
   }
 
-  public setProperty(propertyPath: AllPaths<RectangleProperties>, value: any): void {
+  public setProperty(propertyPath: AllPaths<RectangleBorderProperties>, value: any): void {
     return setPropertyValue(this, propertyPath, value);
   }
 }

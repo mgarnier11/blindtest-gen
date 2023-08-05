@@ -2,42 +2,115 @@ import { CanvasRenderingContext2D } from "canvas";
 import { Point, Size } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
 import { Component, ComponentProperties } from "./component.js";
-import { CanvasUtils } from "../canvasUtils.js";
-import { dumbDeepCopy } from "../../utils/utils.js";
+import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
 import { Text } from "./text.js";
-import { Transition } from "../effects/transition.js";
 import { Rectangle } from "./rectangle.js";
+import { RectangleBorder } from "./rectangleBorder.js";
+import { Transition, TransitionType } from "../effects/transition.js";
+import { Color, Corners } from "../canvasUtils.js";
+
+interface ProgressSettings {
+  offset: Size;
+  color: Color;
+  corners: Corners;
+}
+
+interface BorderSettings {
+  width: number;
+  color: Color;
+  corners: Corners;
+}
 
 type ProgressBarProperties = ComponentProperties & {
   size: Size;
   startFrame: number;
   endFrame: number;
+  progressSettings: ProgressSettings;
+  borderSettings: BorderSettings;
+  transitionType: TransitionType;
 };
 
 export class ProgressBar extends Component {
-  private _size: Size = { width: 0, height: 0 };
-  private _startFrame: number = 0;
-  private _endFrame: number = 0;
+  private size: Size;
+  private startFrame: number;
+  private endFrame: number;
+  private progressSettings: ProgressSettings;
+  private borderSettings: BorderSettings;
+  private transitionType: TransitionType;
 
   public override getProperties(): ProgressBarProperties {
     return dumbDeepCopy({
       ...super.getProperties(),
-      size: this._size,
-      startFrame: this._startFrame,
-      endFrame: this._endFrame,
+      size: this.size,
+      startFrame: this.startFrame,
+      endFrame: this.endFrame,
+      progressSettings: this.progressSettings,
+      borderSettings: this.borderSettings,
+      transitionType: this.transitionType,
     });
   }
 
-  public constructor(position: Point, size: Size, startFrame: number, endFrame: number, effects: Effect[]) {
+  private progressTransition: Transition;
+
+  public constructor(
+    position: Point,
+    size: Size,
+    startFrame: number,
+    endFrame: number,
+    effects: Effect[],
+    progressSettings?: ProgressSettings,
+    borderSettings?: BorderSettings,
+    transitionType?: TransitionType
+  ) {
     super(position, effects);
-    this._size.width = size.width;
-    this._size.height = size.height;
-    this._startFrame = startFrame;
-    this._endFrame = endFrame;
+    this.size = dumbDeepCopy(size);
+    this.startFrame = startFrame;
+    this.endFrame = endFrame;
+    this.progressSettings = dumbDeepCopy(
+      progressSettings || {
+        offset: { width: 0, height: 0 },
+        color: "",
+        corners: 0,
+      }
+    );
+    this.borderSettings = dumbDeepCopy(
+      borderSettings || {
+        width: 0,
+        color: "",
+        corners: 0,
+      }
+    );
+    this.transitionType = transitionType || TransitionType.EASE_IN_OUT;
 
-    this.subComponents.set("text", new Text({ x: 5, y: 20 }, [new Transition("position.x", 100, 0, 60)]));
+    this.progressTransition = new Transition(
+      "size.width",
+      size.width - this.progressSettings.offset.width * 2,
+      startFrame,
+      endFrame,
+      TransitionType.EASE_IN_OUT
+    );
 
-    this.subComponents.set("innerBar", new Rectangle({ x: 0, y: 0 }, { width: 0, height: 0 }, []));
+    this.subComponents.set(
+      "border",
+      new RectangleBorder(
+        { x: 0, y: 0 },
+        { width: 0, height: 0 },
+        this.borderSettings.width,
+        [],
+        this.borderSettings.color,
+        this.borderSettings.corners
+      )
+    );
+    this.subComponents.set(
+      "progress",
+      new Rectangle(
+        { x: this.progressSettings.offset.width, y: this.progressSettings.offset.width },
+        { width: 0, height: 0 },
+        [this.progressTransition],
+        this.progressSettings.color,
+        this.progressSettings.corners
+      )
+    );
   }
 
   public override drawComponent(
@@ -45,30 +118,28 @@ export class ProgressBar extends Component {
     frame: number,
     updatedProperties: ProgressBarProperties
   ) {
-    // CanvasUtils.drawRectangleBorder(context, updatedProperties.position, updatedProperties.size, "#000000");
+    const border = this.getSubComponent<RectangleBorder>("border");
+    border.setProperty("size", updatedProperties.size);
+    border.setProperty("color", updatedProperties.borderSettings.color);
+    border.setProperty("width", updatedProperties.borderSettings.width);
+    border.setProperty("corners", updatedProperties.borderSettings.corners);
 
-    let progress = (frame - updatedProperties.startFrame) / (updatedProperties.endFrame - updatedProperties.startFrame);
-    if (progress < 0) progress = 0;
-    if (progress > 1) progress = 1;
-    const innerSize = {
-      width: updatedProperties.size.width - 6,
-      height: updatedProperties.size.height - 6,
-    };
+    const progress = this.getSubComponent<Rectangle>("progress");
+    progress.setProperty("position.x", updatedProperties.progressSettings.offset.width);
+    progress.setProperty("position.y", updatedProperties.progressSettings.offset.height);
+    progress.setProperty(
+      "size.height",
+      updatedProperties.size.height - updatedProperties.progressSettings.offset.height * 2
+    );
+    progress.setProperty("color", updatedProperties.progressSettings.color);
+    progress.setProperty("corners", updatedProperties.progressSettings.corners);
 
-    // CanvasUtils.drawRectangle(
-    //   context,
-    //   innerPosition,
-    //   {
-    //     width: innerSize.width * progress,
-    //     height: innerSize.height,
-    //   },
-    //   "#000000"
-    // );
+    this.progressTransition.updateEndValue(
+      updatedProperties.size.width - updatedProperties.progressSettings.offset.width * 2
+    );
+  }
 
-    this.getSubComponent<Rectangle>("innerBar").setSize({
-      width: innerSize.width * progress,
-      height: innerSize.height,
-    });
-    this.getSubComponent<Text>("text").setText(`${Math.round(progress * 100)}%`);
+  public setProperty(propertyPath: AllPaths<ProgressBarProperties>, value: any): void {
+    return setPropertyValue(this, propertyPath, value);
   }
 }

@@ -1,28 +1,32 @@
 import { CanvasRenderingContext2D } from "canvas";
 import { Point } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
-import { dumbDeepCopy } from "../../utils/utils.js";
+import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
+import { Color } from "../canvasUtils.js";
 
 export interface ComponentProperties {
   position: Point;
   display: boolean;
+  color: Color;
 }
 export abstract class Component {
-  protected position: Point = { x: 0, y: 0 };
+  protected position: Point;
+  protected color: Color;
   protected display = true;
 
   protected effects: Effect[];
   protected subComponents: Map<string, Component> = new Map();
 
-  constructor(position: Point, effects: Effect[]) {
-    this.position.x = position.x;
-    this.position.y = position.y;
+  constructor(position: Point, effects: Effect[], color?: Color) {
+    this.position = dumbDeepCopy(position);
     this.effects = effects;
+    this.color = dumbDeepCopy(color || { type: "rgba", r: 0, g: 0, b: 0 });
   }
 
   public getProperties(): ComponentProperties {
     return dumbDeepCopy({
       position: this.position,
+      color: this.color,
       display: this.display,
     });
   }
@@ -65,9 +69,4 @@ export abstract class Component {
     updatedProperties: any,
     ...params: any
   ): void;
-
-  public setPosition(position: Point) {
-    this.position.x = position.x;
-    this.position.y = position.y;
-  }
 }

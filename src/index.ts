@@ -12,10 +12,11 @@ import { MusicRequest } from "./utils/interfaces.js";
 import { Track } from "./track/track.js";
 import { Text } from "./track/components/text.js";
 import { outDirPath, tmpDirPath } from "./utils/config.js";
-import { Transition } from "./track/effects/transition.js";
+import { Transition, TransitionType } from "./track/effects/transition.js";
 import { ProgressBar } from "./track/components/progressBar.js";
 import Ffmpeg from "fluent-ffmpeg";
 import { Switch } from "./track/effects/switch.js";
+import { Rectangle } from "./track/components/rectangle.js";
 
 // const text = new Text(
 //   { x: -100, y: 400 },
@@ -34,13 +35,43 @@ import { Switch } from "./track/effects/switch.js";
 //   }
 // );
 
-const bar = new ProgressBar({ x: 100, y: 200 }, { height: 50, width: 500 }, 0, 120, [
-  new Transition("position.x", 400, 0, 45),
-  // new Transition("size.width", 100, 45, 120),
-  // new Switch("display", [5, 45]),
-]);
+const videoWidth = 1920;
+const videoHeight = 1080;
+const framerate = 30;
+const countdownDuration = 5;
+const videoDuration = 7;
 
-for (let frame = 0; frame <= 150; frame++) {
+const countdownFrames = countdownDuration * framerate;
+
+const countdownText = new Text(
+  { x: videoWidth / 2, y: videoHeight * 0.8 },
+  [new Switch("display", [countdownFrames])],
+  "",
+  "center",
+  {
+    family: "Arial",
+    size: 150,
+  }
+);
+
+const bar = new ProgressBar(
+  { x: videoWidth / 2 - 500 / 2, y: videoHeight / 2 - 50 / 2 },
+  { height: 50, width: 500 },
+  0,
+  countdownFrames,
+  [
+    new Transition("position.y", videoHeight, countdownFrames, countdownFrames + 1 * framerate),
+    // new Switch("display", [countdownFrames + 1 * framerate]),
+    // new Transition("size.width", 1000, 0, countdownFrames),
+    // new Transition("size.height", 100, 0, countdownFrames),
+    // new Switch("display", [5, 45]),
+  ],
+  { color: "red", offset: { width: 9, height: 9 }, corners: 5 },
+  { color: "black", width: 8, corners: 9 },
+  TransitionType.EASE_IN_OUT
+);
+
+for (let frame = 1; frame <= framerate * videoDuration; frame++) {
   const canvas = new Canvas(1920, 1080);
   const context = canvas.getContext("2d");
 
@@ -48,17 +79,18 @@ for (let frame = 0; frame <= 150; frame++) {
   context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
   bar.draw(context, frame);
+  countdownText.draw(context, frame, `${(countdownDuration - frame / framerate).toFixed(0)}`);
 
   const output = canvas.toBuffer("image/png");
   const paddedNumber = String(frame).padStart(6, "0");
   const imageFileName = `frame-${paddedNumber}.png`;
   fs.writeFileSync(`${tmpDirPath}/${imageFileName}`, output);
+
+  console.log(`Rendered frame ${frame}`);
 }
 
 Ffmpeg.setFfmpegPath(ffmpegStatic!);
 Ffmpeg.setFfprobePath(ffprobeStatic.path);
-
-const framerate = 10;
 
 Ffmpeg()
   .input(`${tmpDirPath}/frame-%06d.png`)
