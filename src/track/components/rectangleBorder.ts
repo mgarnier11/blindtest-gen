@@ -2,7 +2,7 @@ import { CanvasRenderingContext2D } from "canvas";
 import { Point, Size } from "../../utils/interfaces.js";
 import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
 import { Effect } from "../effects/effect";
-import { Component, ComponentProperties } from "./component.js";
+import { Component, ComponentProperties, ComponentType } from "./component.js";
 import { CanvasUtils, Color, Corners } from "../canvasUtils.js";
 
 type RectangleBorderProperties = ComponentProperties & {
@@ -11,28 +11,36 @@ type RectangleBorderProperties = ComponentProperties & {
   corners: Corners;
 };
 
+const defaultRectangleBorderProperties: RectangleBorderProperties = {
+  ...dumbDeepCopy(Component.defaultComponentProperties),
+  size: { width: 0, height: 0 },
+  width: 0,
+  corners: { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 },
+};
+
 export class RectangleBorder extends Component {
-  private size: Size;
-  private width: number;
-  private corners: Corners;
+  public static Builder = class extends Component.Builder {
+    builderProperties: RectangleBorderProperties = dumbDeepCopy(defaultRectangleBorderProperties);
 
-  public constructor(position: Point, size: Size, width: number, effects: Effect[], color?: Color, corners?: Corners) {
-    super(position, effects, color);
-    this.size = dumbDeepCopy(size);
-    this.width = width;
-    this.corners = dumbDeepCopy(
-      corners || { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
-    );
+    public withSize = (size: Size): this => this.setProperty<RectangleBorderProperties>("size", size);
+    public withWidth = (width: number): this => this.setProperty<RectangleBorderProperties>("width", width);
+    public withCorners = (corners: Corners): this => this.setProperty<RectangleBorderProperties>("corners", corners);
+
+    public build(): RectangleBorder {
+      const component = new RectangleBorder();
+
+      component.setProperties(this.builderProperties);
+      component.effects = this.effects;
+
+      return component;
+    }
+  };
+  private constructor() {
+    super();
   }
 
-  public override getProperties(): RectangleBorderProperties {
-    return dumbDeepCopy({
-      ...super.getProperties(),
-      size: this.size,
-      width: this.width,
-      corners: this.corners,
-    });
-  }
+  protected type = ComponentType.RectangleBorder;
+  protected override properties: RectangleBorderProperties = dumbDeepCopy(defaultRectangleBorderProperties);
 
   public override drawComponent(
     context: CanvasRenderingContext2D,
@@ -55,7 +63,10 @@ export class RectangleBorder extends Component {
     );
   }
 
-  public setProperty(propertyPath: AllPaths<RectangleBorderProperties>, value: any): void {
-    return setPropertyValue(this, propertyPath, value);
+  public override setProperty<RectangleBorderProperties>(
+    propertyPath: AllPaths<RectangleBorderProperties>,
+    value: any
+  ) {
+    super.setProperty(propertyPath, value);
   }
 }

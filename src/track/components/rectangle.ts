@@ -2,7 +2,7 @@ import { CanvasRenderingContext2D } from "canvas";
 import { Point, Size } from "../../utils/interfaces.js";
 import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
 import { Effect } from "../effects/effect";
-import { Component, ComponentProperties } from "./component.js";
+import { Component, ComponentProperties, ComponentType } from "./component.js";
 import { CanvasUtils, Color, Corners } from "../canvasUtils.js";
 
 type RectangleProperties = ComponentProperties & {
@@ -10,25 +10,34 @@ type RectangleProperties = ComponentProperties & {
   corners: Corners;
 };
 
+const defaultRectangleProperties: RectangleProperties = {
+  ...Component.defaultComponentProperties,
+  size: { width: 0, height: 0 },
+  corners: { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 },
+};
+
 export class Rectangle extends Component {
-  private size: Size;
-  private corners: Corners;
+  public static Builder = class extends Component.Builder {
+    builderProperties: RectangleProperties = dumbDeepCopy(defaultRectangleProperties);
 
-  public constructor(position: Point, size: Size, effects: Effect[], color?: Color, corners?: Corners) {
-    super(position, effects, color);
-    this.size = dumbDeepCopy(size);
-    this.corners = dumbDeepCopy<Corners>(
-      corners || { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
-    );
+    public withSize = (size: Size): this => this.setProperty<RectangleProperties>("size", size);
+    public withCorners = (corners: Corners): this => this.setProperty<RectangleProperties>("corners", corners);
+
+    public build(): Rectangle {
+      const component = new Rectangle();
+
+      component.setProperties(this.builderProperties);
+      component.effects = this.effects;
+
+      return component;
+    }
+  };
+  private constructor() {
+    super();
   }
 
-  public override getProperties(): RectangleProperties {
-    return dumbDeepCopy({
-      ...super.getProperties(),
-      size: this.size,
-      corners: this.corners,
-    });
-  }
+  protected type = ComponentType.Rectangle;
+  protected override properties: RectangleProperties = dumbDeepCopy(defaultRectangleProperties);
 
   public override drawComponent(
     context: CanvasRenderingContext2D,
@@ -44,7 +53,7 @@ export class Rectangle extends Component {
     );
   }
 
-  public setProperty(propertyPath: AllPaths<RectangleProperties>, value: any): void {
-    return setPropertyValue(this, propertyPath, value);
+  public override setProperty<RectangleProperties>(propertyPath: AllPaths<RectangleProperties>, value: any) {
+    super.setProperty(propertyPath, value);
   }
 }

@@ -19,6 +19,8 @@ import { Switch } from "./track/effects/switch.js";
 import { Rectangle } from "./track/components/rectangle.js";
 import { Effects } from "./track/effects/transitions.js";
 import { Set } from "./track/effects/set.js";
+import { RectangleBorder } from "./track/components/rectangleBorder.js";
+import { Component } from "./track/components/component.js";
 
 // const text = new Text(
 //   { x: -100, y: 400 },
@@ -42,45 +44,36 @@ fs.mkdirSync(tmpDirPath, { recursive: true });
 
 const videoWidth = 1920;
 const videoHeight = 1080;
-const framerate = 30;
+const framerate = 120;
 const countdownDuration = 5;
 const videoDuration = 7;
 
 const countdownFrames = countdownDuration * framerate;
 
-const countdownText = new Text(
-  { x: videoWidth / 2, y: videoHeight * 0.8 },
-  [
-    // new Set("opacity", 0, 0),
-    // ...Effects.Fade(0, framerate, "in"),
-    // ...Effects.Fade(framerate * 2, framerate * 3, "out"),
-    // ...Effects.Fade(framerate * 4, framerate * 5, "in"),
-    // ...Effects.Fade(framerate * 6, framerate * 7, "out"),
-  ],
-  "",
-  "center",
-  {
-    family: "Arial",
-    size: 150,
-  }
-);
+const countdownText = new Text.Builder()
+  .withPosition({ x: videoWidth / 2, y: videoHeight / 2 - 50 })
+  .withColor("white")
+  .withFontSettings({ family: "Arial", size: 20 })
+  .withTextAlign("center")
+  .withEffects([
+    new Set("opacity", 0, 0),
+    ...Effects.Fade(0, framerate, "in"),
+    ...Effects.Fade(framerate * 2, framerate * 3, "out"),
+    ...Effects.Fade(framerate * 4, framerate * 5, "in"),
+    ...Effects.Fade(framerate * 6, framerate * 7, "out"),
+  ])
+  .build();
 
-const bar = new ProgressBar(
-  { x: videoWidth / 2 - 500 / 2, y: videoHeight / 2 - 50 / 2 },
-  { height: 50, width: 500 },
-  0,
-  countdownFrames,
-  [
-    // new Transition("position.y", videoHeight, countdownFrames, countdownFrames + 1 * framerate),
-    // new Switch("display", [countdownFrames + 1 * framerate]),
-    // new Transition("size.width", 1000, 0, countdownFrames),
-    // new Transition("size.height", 100, 0, countdownFrames),
-    // new Switch("display", [5, 45]),
-  ],
-  { color: "white", offset: { width: 7, height: 7 }, corners: 3 },
-  { color: "white", width: 6, corners: 7 },
-  TransitionType.EASE_IN_OUT
-);
+const bar = new ProgressBar.Builder()
+  .withPosition({ x: videoWidth / 2 - 500 / 2, y: videoHeight / 2 - 50 / 2 })
+  .withSize({ width: 500, height: 50 })
+  .withStartFrame(0)
+  .withEndFrame(countdownFrames)
+  .withColor("white")
+  .withProgressSettings({ offset: { width: 7, height: 7 }, corners: 3 })
+  .withBorderSettings({ color: "white", width: 6, corners: 7 })
+  .withTransitionType(TransitionType.EASE_IN_OUT)
+  .build(framerate);
 
 for (let frame = 1; frame <= framerate * videoDuration; frame++) {
   const canvas = new Canvas(1920, 1080);

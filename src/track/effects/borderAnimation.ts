@@ -1,32 +1,48 @@
 import { CanvasRenderingContext2D } from "canvas";
-import { Effect } from "./effect.js";
-import { getPropertyValue, setPropertyValue } from "../../utils/utils.js";
+import { Effect, EffectProperties, EffectType } from "./effect.js";
+import { dumbDeepCopy, getPropertyValue, setPropertyValue } from "../../utils/utils.js";
 import { CanvasUtils } from "../canvasUtils.js";
+
+type BorderAnimationProperties = EffectProperties & {
+  startFrame: number;
+  endFrame: number;
+  borderDelay: number;
+  nbBorders: number;
+};
 
 export class BorderAnimation extends Effect {
   constructor(
     public startFrame: number,
-    public borderDuration: number,
+    public endFrame: number,
     public borderDelay: number,
     public nbBorders: number
   ) {
     super();
+    this.type = EffectType.BorderAnimation;
+  }
+
+  public override getProperties(): BorderAnimationProperties {
+    return dumbDeepCopy({
+      startFrame: this.startFrame,
+      endFrame: this.endFrame,
+      borderDelay: this.borderDelay,
+      nbBorders: this.nbBorders,
+    });
   }
 
   public override apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): void {
-    const componentSize = getPropertyValue(properties, "size");
-    const borderSettings = getPropertyValue(properties, "borderSettings");
+    if (actualFrame >= this.startFrame && actualFrame < this.endFrame) {
+      const componentSize = getPropertyValue(properties, "size");
+      const borderSettings = getPropertyValue(properties, "borderSettings");
+      const animationDuration = this.endFrame - this.startFrame;
+      const borderDuration = animationDuration - this.borderDelay * (this.nbBorders - 1);
 
-    if (
-      actualFrame >= this.startFrame &&
-      actualFrame < this.startFrame + this.borderDuration * this.nbBorders + this.borderDelay * (this.nbBorders - 1)
-    ) {
       for (let i = 0; i < this.nbBorders; i++) {
         const frameDiff = actualFrame - this.startFrame - this.borderDelay * i;
-        if (frameDiff > 0 && frameDiff < this.borderDuration) {
+        if (frameDiff > 0 && frameDiff < borderDuration) {
           context.save();
 
-          context.globalAlpha = 1 - frameDiff / this.borderDuration;
+          context.globalAlpha = 1 - frameDiff / borderDuration;
 
           const offset = frameDiff * (borderSettings.width * 0.75);
 

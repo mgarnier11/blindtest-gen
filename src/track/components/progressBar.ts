@@ -1,7 +1,7 @@
 import { CanvasRenderingContext2D } from "canvas";
 import { Point, Size } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
-import { Component, ComponentProperties } from "./component.js";
+import { Component, ComponentProperties, ComponentType } from "./component.js";
 import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
 import { Text } from "./text.js";
 import { Rectangle } from "./rectangle.js";
@@ -12,7 +12,6 @@ import { BorderAnimation } from "../effects/borderAnimation.js";
 
 interface ProgressSettings {
   offset: Size;
-  color: Color;
   corners: Corners;
 }
 
@@ -31,88 +30,85 @@ type ProgressBarProperties = ComponentProperties & {
   transitionType: TransitionType;
 };
 
+const defaultProgressBarProperties: ProgressBarProperties = {
+  ...Component.defaultComponentProperties,
+  size: { width: 0, height: 0 },
+  startFrame: 0,
+  endFrame: 0,
+  progressSettings: {
+    offset: { width: 0, height: 0 },
+    corners: 0,
+  },
+  borderSettings: {
+    width: 0,
+    color: { type: "rgba", r: 0, g: 0, b: 0 },
+    corners: 0,
+  },
+  transitionType: TransitionType.EASE_IN_OUT,
+};
+
 export class ProgressBar extends Component {
-  private size: Size;
-  private startFrame: number;
-  private endFrame: number;
-  private progressSettings: ProgressSettings;
-  private borderSettings: BorderSettings;
-  private transitionType: TransitionType;
+  public static Builder = class extends Component.Builder {
+    builderProperties: ProgressBarProperties = dumbDeepCopy(defaultProgressBarProperties);
 
-  public override getProperties(): ProgressBarProperties {
-    return dumbDeepCopy({
-      ...super.getProperties(),
-      size: this.size,
-      startFrame: this.startFrame,
-      endFrame: this.endFrame,
-      progressSettings: this.progressSettings,
-      borderSettings: this.borderSettings,
-      transitionType: this.transitionType,
-    });
+    public withSize = (size: Size): this => this.setProperty<ProgressBarProperties>("size", size);
+    public withStartFrame = (startFrame: number): this =>
+      this.setProperty<ProgressBarProperties>("startFrame", startFrame);
+    public withEndFrame = (endFrame: number): this => this.setProperty<ProgressBarProperties>("endFrame", endFrame);
+    public withProgressSettings = (progressSettings: ProgressSettings): this =>
+      this.setProperty<ProgressBarProperties>("progressSettings", progressSettings);
+    public withBorderSettings = (borderSettings: BorderSettings): this =>
+      this.setProperty<ProgressBarProperties>("borderSettings", borderSettings);
+    public withTransitionType = (transitionType: TransitionType): this =>
+      this.setProperty<ProgressBarProperties>("transitionType", transitionType);
+
+    public build(framerate: number): ProgressBar {
+      const component = new ProgressBar();
+
+      component.setProperties(this.builderProperties);
+      component.effects = [
+        ...this.effects,
+        new BorderAnimation(this.builderProperties.endFrame, this.builderProperties.endFrame + framerate * 0.25, 2, 3),
+      ];
+
+      component.progressTransition = new Transition(
+        "size.width",
+        this.builderProperties.size.width - this.builderProperties.progressSettings.offset.width * 2,
+        this.builderProperties.startFrame,
+        this.builderProperties.endFrame,
+        this.builderProperties.transitionType
+      );
+      component.subComponents.set(
+        "border",
+        new RectangleBorder.Builder()
+          .withPosition({ x: 0, y: 0 })
+          .withSize({ width: 0, height: 0 })
+          .withWidth(this.builderProperties.borderSettings.width)
+          .withColor(this.builderProperties.borderSettings.color)
+          .withCorners(this.builderProperties.borderSettings.corners)
+          .build()
+      );
+      component.subComponents.set(
+        "progress",
+        new Rectangle.Builder()
+          .withPosition({ x: this.builderProperties.progressSettings.offset.width, y: 0 })
+          .withSize({ width: 0, height: 0 })
+          .withColor(this.builderProperties.color)
+          .withCorners(this.builderProperties.progressSettings.corners)
+          .withEffects([component.progressTransition])
+          .build()
+      );
+
+      return component;
+    }
+  };
+  private constructor() {
+    super();
   }
 
-  private progressTransition: Transition;
-
-  public constructor(
-    position: Point,
-    size: Size,
-    startFrame: number,
-    endFrame: number,
-    effects: Effect[],
-    progressSettings?: ProgressSettings,
-    borderSettings?: BorderSettings,
-    transitionType?: TransitionType
-  ) {
-    super(position, [...effects, new BorderAnimation(endFrame, 5, 3, 3)]);
-    this.size = dumbDeepCopy(size);
-    this.startFrame = startFrame;
-    this.endFrame = endFrame;
-    this.progressSettings = dumbDeepCopy(
-      progressSettings || {
-        offset: { width: 0, height: 0 },
-        color: "",
-        corners: 0,
-      }
-    );
-    this.borderSettings = dumbDeepCopy(
-      borderSettings || {
-        width: 0,
-        color: "",
-        corners: 0,
-      }
-    );
-    this.transitionType = transitionType || TransitionType.EASE_IN_OUT;
-
-    this.progressTransition = new Transition(
-      "size.width",
-      size.width - this.progressSettings.offset.width * 2,
-      startFrame,
-      endFrame,
-      TransitionType.EASE_IN_OUT
-    );
-
-    this.subComponents.set(
-      "border",
-      new RectangleBorder(
-        { x: 0, y: 0 },
-        { width: 0, height: 0 },
-        this.borderSettings.width,
-        [],
-        this.borderSettings.color,
-        this.borderSettings.corners
-      )
-    );
-    this.subComponents.set(
-      "progress",
-      new Rectangle(
-        { x: this.progressSettings.offset.width, y: this.progressSettings.offset.width },
-        { width: 0, height: 0 },
-        [this.progressTransition],
-        this.progressSettings.color,
-        this.progressSettings.corners
-      )
-    );
-  }
+  protected type = ComponentType.ProgressBar;
+  protected override properties: ProgressBarProperties = dumbDeepCopy(defaultProgressBarProperties);
+  private progressTransition!: Transition;
 
   public override drawComponent(
     context: CanvasRenderingContext2D,
@@ -132,7 +128,7 @@ export class ProgressBar extends Component {
       "size.height",
       updatedProperties.size.height - updatedProperties.progressSettings.offset.height * 2
     );
-    progress.setProperty("color", updatedProperties.progressSettings.color);
+    progress.setProperty("color", updatedProperties.color);
     progress.setProperty("corners", updatedProperties.progressSettings.corners);
 
     this.progressTransition.updateEndValue(
@@ -140,7 +136,7 @@ export class ProgressBar extends Component {
     );
   }
 
-  public setProperty(propertyPath: AllPaths<ProgressBarProperties>, value: any): void {
-    return setPropertyValue(this, propertyPath, value);
+  public override setProperty<ProgressBarProperties>(propertyPath: AllPaths<ProgressBarProperties>, value: any) {
+    super.setProperty(propertyPath, value);
   }
 }

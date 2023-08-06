@@ -1,5 +1,5 @@
 import { CanvasRenderingContext2D } from "canvas";
-import { Component, ComponentProperties } from "./component.js";
+import { Component, ComponentProperties, ComponentType } from "./component.js";
 import { Point } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
 import { AllPaths, dumbDeepCopy, setPropertyValue } from "../../utils/utils.js";
@@ -16,33 +16,38 @@ type TextProperties = ComponentProperties & {
   text: string;
 };
 
+const defaultTextProperties: TextProperties = {
+  ...dumbDeepCopy(Component.defaultComponentProperties),
+  textAlign: "left",
+  fontSettings: { size: 100, family: "Arial" },
+  text: "",
+};
+
 export class Text extends Component {
-  private textAlign: CanvasTextAlign;
-  private fontSettings: FontSettings;
-  private text: string;
+  public static Builder = class extends Component.Builder {
+    builderProperties: TextProperties = dumbDeepCopy(defaultTextProperties);
 
-  public override getProperties(): TextProperties {
-    return dumbDeepCopy({
-      ...super.getProperties(),
-      textAlign: this.textAlign,
-      fontSettings: this.fontSettings,
-      text: this.text,
-    });
+    public withTextAlign = (textAlign: CanvasTextAlign): this =>
+      this.setProperty<TextProperties>("textAlign", textAlign);
+    public withFontSettings = (fontSettings: FontSettings): this =>
+      this.setProperty<TextProperties>("fontSettings", fontSettings);
+    public withText = (text: string): this => this.setProperty<TextProperties>("text", text);
+
+    public build(): Text {
+      const component = new Text();
+
+      component.setProperties(this.builderProperties);
+      component.effects = this.effects;
+
+      return component;
+    }
+  };
+  private constructor() {
+    super();
   }
 
-  public constructor(
-    position: Point,
-    effects: Effect[],
-    text?: string,
-    textAlign?: CanvasTextAlign,
-    fontSettings?: FontSettings,
-    color?: Color
-  ) {
-    super(position, effects, color);
-    this.textAlign = textAlign || "left";
-    this.fontSettings = dumbDeepCopy(fontSettings || { size: 100, family: "Arial" });
-    this.text = text || "";
-  }
+  protected type = ComponentType.Text;
+  protected override properties: TextProperties = dumbDeepCopy(defaultTextProperties);
 
   public override draw(context: CanvasRenderingContext2D, frame: number, text: string) {
     super.draw(context, frame, text);
@@ -58,10 +63,10 @@ export class Text extends Component {
     context.fillStyle = CanvasUtils.getColorString(updatedProperties.color);
     context.textAlign = updatedProperties.textAlign;
 
-    context.fillText(text ? text : this.text, updatedProperties.position.x, updatedProperties.position.y);
+    context.fillText(text ? text : updatedProperties.text, updatedProperties.position.x, updatedProperties.position.y);
   }
 
-  public setProperty(propertyPath: AllPaths<TextProperties>, value: any): void {
-    return setPropertyValue(this, propertyPath, value);
+  public override setProperty<TextProperties>(propertyPath: AllPaths<TextProperties>, value: any) {
+    super.setProperty(propertyPath, value);
   }
 }

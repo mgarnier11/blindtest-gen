@@ -1,6 +1,6 @@
 import { CanvasRenderingContext2D } from "canvas";
-import { getPropertyValue, setPropertyValue } from "../../utils/utils.js";
-import { Effect } from "./effect.js";
+import { dumbDeepCopy, getPropertyValue, setPropertyValue } from "../../utils/utils.js";
+import { Effect, EffectProperties, EffectType } from "./effect.js";
 
 export enum TransitionType {
   LINEAR = "linear",
@@ -9,15 +9,34 @@ export enum TransitionType {
   EASE_IN_OUT = "ease-in-out",
 }
 
+type TransitionProperties = EffectProperties & {
+  property: string;
+  endValue: number;
+  startFrame: number;
+  endFrame: number;
+  transitionType: TransitionType;
+};
+
 export class Transition extends Effect {
   constructor(
     public property: string,
     public endValue: number,
     public startFrame: number,
     public endFrame: number,
-    public type: TransitionType = TransitionType.LINEAR
+    public transitionType: TransitionType = TransitionType.LINEAR
   ) {
     super();
+    this.type = EffectType.Transition;
+  }
+
+  public override getProperties(): TransitionProperties {
+    return dumbDeepCopy({
+      property: this.property,
+      endValue: this.endValue,
+      startFrame: this.startFrame,
+      endFrame: this.endFrame,
+      transitionType: this.transitionType,
+    });
   }
 
   public override apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): void {
@@ -31,13 +50,13 @@ export class Transition extends Effect {
 
     let progress = 0;
 
-    if (this.type === TransitionType.LINEAR) {
+    if (this.transitionType === TransitionType.LINEAR) {
       progress = (actualFrame - this.startFrame) / (this.endFrame - this.startFrame);
-    } else if (this.type === TransitionType.EASE_IN) {
+    } else if (this.transitionType === TransitionType.EASE_IN) {
       progress = Math.pow((actualFrame - this.startFrame) / (this.endFrame - this.startFrame), 2);
-    } else if (this.type === TransitionType.EASE_OUT) {
+    } else if (this.transitionType === TransitionType.EASE_OUT) {
       progress = 1 - Math.pow(1 - (actualFrame - this.startFrame) / (this.endFrame - this.startFrame), 2);
-    } else if (this.type === TransitionType.EASE_IN_OUT) {
+    } else if (this.transitionType === TransitionType.EASE_IN_OUT) {
       progress = 0.5 - 0.5 * Math.cos((Math.PI * (actualFrame - this.startFrame)) / (this.endFrame - this.startFrame));
     }
 
