@@ -17,6 +17,8 @@ import { ProgressBar } from "./track/components/progressBar.js";
 import Ffmpeg from "fluent-ffmpeg";
 import { Switch } from "./track/effects/switch.js";
 import { Rectangle } from "./track/components/rectangle.js";
+import { Effects } from "./track/effects/transitions.js";
+import { Set } from "./track/effects/set.js";
 
 // const text = new Text(
 //   { x: -100, y: 400 },
@@ -35,6 +37,9 @@ import { Rectangle } from "./track/components/rectangle.js";
 //   }
 // );
 
+if (fs.existsSync(tmpDirPath)) fs.rmSync(tmpDirPath, { recursive: true, force: true });
+fs.mkdirSync(tmpDirPath, { recursive: true });
+
 const videoWidth = 1920;
 const videoHeight = 1080;
 const framerate = 30;
@@ -45,7 +50,13 @@ const countdownFrames = countdownDuration * framerate;
 
 const countdownText = new Text(
   { x: videoWidth / 2, y: videoHeight * 0.8 },
-  [new Switch("display", [countdownFrames])],
+  [
+    // new Set("opacity", 0, 0),
+    // ...Effects.Fade(0, framerate, "in"),
+    // ...Effects.Fade(framerate * 2, framerate * 3, "out"),
+    // ...Effects.Fade(framerate * 4, framerate * 5, "in"),
+    // ...Effects.Fade(framerate * 6, framerate * 7, "out"),
+  ],
   "",
   "center",
   {
@@ -60,14 +71,14 @@ const bar = new ProgressBar(
   0,
   countdownFrames,
   [
-    new Transition("position.y", videoHeight, countdownFrames, countdownFrames + 1 * framerate),
+    // new Transition("position.y", videoHeight, countdownFrames, countdownFrames + 1 * framerate),
     // new Switch("display", [countdownFrames + 1 * framerate]),
     // new Transition("size.width", 1000, 0, countdownFrames),
     // new Transition("size.height", 100, 0, countdownFrames),
     // new Switch("display", [5, 45]),
   ],
-  { color: "red", offset: { width: 9, height: 9 }, corners: 5 },
-  { color: "black", width: 8, corners: 9 },
+  { color: "white", offset: { width: 7, height: 7 }, corners: 3 },
+  { color: "white", width: 6, corners: 7 },
   TransitionType.EASE_IN_OUT
 );
 
@@ -75,7 +86,7 @@ for (let frame = 1; frame <= framerate * videoDuration; frame++) {
   const canvas = new Canvas(1920, 1080);
   const context = canvas.getContext("2d");
 
-  context.fillStyle = "#ffffff";
+  context.fillStyle = "#000000";
   context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
   bar.draw(context, frame);

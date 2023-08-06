@@ -30,7 +30,7 @@ export function setPropertyValue(object: any, propertyPath: string, value: any) 
   }
 }
 
-export function dumbDeepCopy(object: any) {
+export function dumbDeepCopy<T>(object: T): T {
   return JSON.parse(JSON.stringify(object));
 }
 

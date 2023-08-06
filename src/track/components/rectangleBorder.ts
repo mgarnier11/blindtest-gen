@@ -20,7 +20,9 @@ export class RectangleBorder extends Component {
     super(position, effects, color);
     this.size = dumbDeepCopy(size);
     this.width = width;
-    this.corners = dumbDeepCopy(corners || { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 });
+    this.corners = dumbDeepCopy(
+      corners || { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
+    );
   }
 
   public override getProperties(): RectangleBorderProperties {

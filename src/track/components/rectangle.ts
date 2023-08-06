@@ -17,7 +17,9 @@ export class Rectangle extends Component {
   public constructor(position: Point, size: Size, effects: Effect[], color?: Color, corners?: Corners) {
     super(position, effects, color);
     this.size = dumbDeepCopy(size);
-    this.corners = dumbDeepCopy(corners || { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 });
+    this.corners = dumbDeepCopy<Corners>(
+      corners || { type: "corners4", topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
+    );
   }
 
   public override getProperties(): RectangleProperties {

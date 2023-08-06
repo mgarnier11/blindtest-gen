@@ -8,6 +8,7 @@ import { Rectangle } from "./rectangle.js";
 import { RectangleBorder } from "./rectangleBorder.js";
 import { Transition, TransitionType } from "../effects/transition.js";
 import { Color, Corners } from "../canvasUtils.js";
+import { BorderAnimation } from "../effects/borderAnimation.js";
 
 interface ProgressSettings {
   offset: Size;
@@ -62,7 +63,7 @@ export class ProgressBar extends Component {
     borderSettings?: BorderSettings,
     transitionType?: TransitionType
   ) {
-    super(position, effects);
+    super(position, [...effects, new BorderAnimation(endFrame, 5, 3, 3)]);
     this.size = dumbDeepCopy(size);
     this.startFrame = startFrame;
     this.endFrame = endFrame;

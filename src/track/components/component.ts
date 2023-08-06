@@ -8,11 +8,13 @@ export interface ComponentProperties {
   position: Point;
   display: boolean;
   color: Color;
+  opacity: number;
 }
 export abstract class Component {
   protected position: Point;
   protected color: Color;
   protected display = true;
+  protected opacity = 1;
 
   protected effects: Effect[];
   protected subComponents: Map<string, Component> = new Map();
@@ -24,10 +26,11 @@ export abstract class Component {
   }
 
   public getProperties(): ComponentProperties {
-    return dumbDeepCopy({
+    return dumbDeepCopy<ComponentProperties>({
       position: this.position,
       color: this.color,
       display: this.display,
+      opacity: this.opacity,
     });
   }
 
@@ -42,11 +45,13 @@ export abstract class Component {
   }
 
   public draw(context: CanvasRenderingContext2D, frame: number, ...params: any) {
-    const updatedProperties = this.applyEffects(context, frame);
-
     context.save();
 
+    const updatedProperties = this.applyEffects(context, frame);
+
     if (updatedProperties.display) {
+      context.globalAlpha = updatedProperties.opacity;
+
       this.drawComponent(context, frame, updatedProperties, ...params);
 
       context.translate(updatedProperties.position.x, updatedProperties.position.y);
