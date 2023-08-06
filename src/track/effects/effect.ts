@@ -1,5 +1,5 @@
 import { CanvasRenderingContext2D } from "canvas";
-import { dumbDeepCopy } from "../../utils/utils";
+import { dumbDeepCopy, generateId } from "../../utils/utils.js";
 
 export enum EffectType {
   Unknown = "Unknown",
@@ -11,17 +11,78 @@ export enum EffectType {
 
 export interface EffectProperties {}
 
+const effectTypeToClass = {
+  [EffectType.BorderAnimation]: (await import("./borderAnimation.js")).BorderAnimation,
+  [EffectType.Switch]: (await import("./switch.js")).Switch,
+  [EffectType.Transition]: (await import("./transition.js")).Transition,
+  [EffectType.Set]: (await import("./set.js")).Set,
+  [EffectType.Unknown]: null,
+};
+
 export abstract class Effect {
+  public static defaultEffectProperties: EffectProperties = {};
+  public static Builder = class {
+    protected builderProperties: EffectProperties = dumbDeepCopy(Effect.defaultEffectProperties);
+
+    protected setProperty<T>(propertyPath: keyof T, value: any): this {
+      if (typeof value === "object") {
+        (this.builderProperties as any)[propertyPath] = dumbDeepCopy(value);
+      } else {
+        (this.builderProperties as any)[propertyPath] = value;
+      }
+
+      return this;
+    }
+
+    protected buildEffect<T extends Effect>(type: EffectType): T {
+      const EffectClass = effectTypeToClass[type];
+
+      if (!EffectClass) {
+        throw new Error(`Unknown effect type: ${type}`);
+      }
+
+      const effect = new EffectClass() as Effect;
+
+      effect.setProperties(this.builderProperties);
+
+      return effect as T;
+    }
+  };
+
+  protected properties: EffectProperties = dumbDeepCopy(Effect.defaultEffectProperties);
   protected type: EffectType = EffectType.Unknown;
+  protected id: string = generateId();
+  public getId = (): string => this.id;
 
   public abstract apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): any;
 
-  public abstract getProperties(): EffectProperties;
+  protected setProperties(properties: EffectProperties) {
+    this.properties = dumbDeepCopy(properties);
+  }
 
+  public getProperties(): EffectProperties {
+    return dumbDeepCopy(this.properties);
+  }
   public toJSON(): any {
     return {
-      ...this.getProperties(),
+      properties: this.getProperties(),
       type: this.type,
+      id: this.id,
     };
+  }
+
+  public static fromJSON<T extends Effect>(json: any): T {
+    const EffectClass = effectTypeToClass[json.type as EffectType];
+
+    if (!EffectClass) {
+      throw new Error(`Unknown effect type: ${json.type}`);
+    }
+
+    const effect = new EffectClass() as Effect;
+
+    effect.id = json.id;
+    effect.setProperties(json.properties);
+
+    return effect as T;
   }
 }

@@ -1,3 +1,9 @@
+import { BorderAnimation } from "../track/effects/borderAnimation.js";
+import { EffectType } from "../track/effects/effect.js";
+import { Set } from "../track/effects/set.js";
+import { Switch } from "../track/effects/switch.js";
+import { Transition } from "../track/effects/transition.js";
+
 export function toBuffer(arrayBuffer: ArrayBuffer) {
   const buffer = Buffer.alloc(arrayBuffer.byteLength);
   const view = new Uint8Array(arrayBuffer);
@@ -39,3 +45,16 @@ export type AllPaths<T> = T extends object
       [K in keyof T]-?: K extends string ? (T[K] extends object ? `${K}` | `${K}.${AllPaths<T[K]>}` : `${K}`) : never;
     }[keyof T]
   : "";
+
+export function generateId() {
+  //generate unique id based on timestamp
+  const timestamp = Date.now().toString(36);
+
+  //generate random 16 digit string
+  const randomString = Math.random().toString(36).substring(2, 15);
+
+  //combine timestamp and random string
+  const id = timestamp + randomString;
+
+  return id;
+}

@@ -17,7 +17,7 @@ import { ProgressBar } from "./track/components/progressBar.js";
 import Ffmpeg from "fluent-ffmpeg";
 import { Switch } from "./track/effects/switch.js";
 import { Rectangle } from "./track/components/rectangle.js";
-import { Effects } from "./track/effects/transitions.js";
+import { Effects } from "./track/effects/effects.js";
 import { Set } from "./track/effects/set.js";
 import { RectangleBorder } from "./track/components/rectangleBorder.js";
 import { Component } from "./track/components/component.js";
@@ -44,7 +44,7 @@ fs.mkdirSync(tmpDirPath, { recursive: true });
 
 const videoWidth = 1920;
 const videoHeight = 1080;
-const framerate = 120;
+const framerate = 30;
 const countdownDuration = 5;
 const videoDuration = 7;
 
@@ -56,7 +56,7 @@ const countdownText = new Text.Builder()
   .withFontSettings({ family: "Arial", size: 20 })
   .withTextAlign("center")
   .withEffects([
-    new Set("opacity", 0, 0),
+    new Set.Builder().withProperty("opacity").withFrameToSet(0).withValue(0).build(),
     ...Effects.Fade(0, framerate, "in"),
     ...Effects.Fade(framerate * 2, framerate * 3, "out"),
     ...Effects.Fade(framerate * 4, framerate * 5, "in"),

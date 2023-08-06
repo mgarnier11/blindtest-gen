@@ -62,22 +62,28 @@ export class ProgressBar extends Component {
     public withTransitionType = (transitionType: TransitionType): this =>
       this.setProperty<ProgressBarProperties>("transitionType", transitionType);
 
-    public build(framerate: number): ProgressBar {
-      const component = new ProgressBar();
+    public build(framerate: number) {
+      const component = super.buildComponent<ProgressBar>(ComponentType.ProgressBar);
 
-      component.setProperties(this.builderProperties);
       component.effects = [
         ...this.effects,
-        new BorderAnimation(this.builderProperties.endFrame, this.builderProperties.endFrame + framerate * 0.25, 2, 3),
+        new BorderAnimation.Builder()
+          .withStartFrame(this.builderProperties.endFrame)
+          .withEndFrame(this.builderProperties.endFrame + framerate * 0.25)
+          .withBorderDelay(2) //has to be indexed to the framerate
+          .withNbBorders(3)
+          .build(),
       ];
 
-      component.progressTransition = new Transition(
-        "size.width",
-        this.builderProperties.size.width - this.builderProperties.progressSettings.offset.width * 2,
-        this.builderProperties.startFrame,
-        this.builderProperties.endFrame,
-        this.builderProperties.transitionType
-      );
+      const progressTransition = new Transition.Builder()
+        .withProperty("size.width")
+        .withEndValue(this.builderProperties.size.width - this.builderProperties.progressSettings.offset.width * 2)
+        .withStartFrame(this.builderProperties.startFrame)
+        .withEndFrame(this.builderProperties.endFrame)
+        .withTransitionType(this.builderProperties.transitionType)
+        .build();
+
+      component.progressTransitionId = progressTransition.getId();
       component.subComponents.set(
         "border",
         new RectangleBorder.Builder()
@@ -95,20 +101,30 @@ export class ProgressBar extends Component {
           .withSize({ width: 0, height: 0 })
           .withColor(this.builderProperties.color)
           .withCorners(this.builderProperties.progressSettings.corners)
-          .withEffects([component.progressTransition])
+          .withEffects([progressTransition])
           .build()
       );
 
       return component;
     }
   };
-  private constructor() {
-    super();
-  }
 
   protected type = ComponentType.ProgressBar;
   protected override properties: ProgressBarProperties = dumbDeepCopy(defaultProgressBarProperties);
-  private progressTransition!: Transition;
+  private progressTransitionId: string = "";
+
+  public override toJSON() {
+    const json = super.toJSON();
+
+    return {
+      ...json,
+      progressTransitionId: this.progressTransitionId,
+    };
+  }
+
+  public override setJSONProperties(json: any) {
+    this.progressTransitionId = json.progressTransitionId;
+  }
 
   public override drawComponent(
     context: CanvasRenderingContext2D,
@@ -131,9 +147,12 @@ export class ProgressBar extends Component {
     progress.setProperty("color", updatedProperties.color);
     progress.setProperty("corners", updatedProperties.progressSettings.corners);
 
-    this.progressTransition.updateEndValue(
-      updatedProperties.size.width - updatedProperties.progressSettings.offset.width * 2
-    );
+    const progressTransition = progress.getEffect<Transition>(this.progressTransitionId);
+
+    if (progressTransition)
+      progressTransition.updateEndValue(
+        updatedProperties.size.width - updatedProperties.progressSettings.offset.width * 2
+      );
   }
 
   public override setProperty<ProgressBarProperties>(propertyPath: AllPaths<ProgressBarProperties>, value: any) {

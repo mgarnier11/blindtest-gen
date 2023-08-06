@@ -1,11 +1,15 @@
 import { CanvasRenderingContext2D } from "canvas";
 import { Point } from "../../utils/interfaces.js";
 import { Effect } from "../effects/effect.js";
-import { AllPaths, dumbDeepCopy, getPropertyValue, setPropertyValue } from "../../utils/utils.js";
+import { AllPaths, dumbDeepCopy, generateId, getPropertyValue, setPropertyValue } from "../../utils/utils.js";
 import { Color } from "../canvasUtils.js";
+import { Rectangle } from "./rectangle.js";
+import { RectangleBorder } from "./rectangleBorder.js";
+import { ProgressBar } from "./progressBar.js";
+import { Text } from "./text.js";
 
 export enum ComponentType {
-  Unknown = "Unknown",
+  Unknown = "unknown",
   Rectangle = "rectangle",
   RectangleBorder = "rectangleBorder",
   Text = "text",
@@ -19,6 +23,14 @@ export interface ComponentProperties {
   opacity: number;
 }
 
+const typeToClass = {
+  [ComponentType.Rectangle]: Rectangle,
+  [ComponentType.RectangleBorder]: RectangleBorder,
+  [ComponentType.Text]: Text,
+  [ComponentType.ProgressBar]: ProgressBar,
+  [ComponentType.Unknown]: null,
+};
+
 export abstract class Component {
   public static defaultComponentProperties: ComponentProperties = {
     position: { x: 0, y: 0 },
@@ -29,8 +41,6 @@ export abstract class Component {
   public static Builder = class {
     protected builderProperties: ComponentProperties = dumbDeepCopy(Component.defaultComponentProperties);
     protected effects: Effect[] = [];
-
-    public constructor() {}
 
     protected setProperty<T>(propertyPath: keyof T, value: any): this {
       if (typeof value === "object") {
@@ -50,7 +60,25 @@ export abstract class Component {
       this.effects = effects;
       return this;
     };
+
+    protected buildComponent<T extends Component>(type: ComponentType): T {
+      const ComponentClass = typeToClass[type];
+
+      if (!ComponentClass) {
+        throw new Error(`Unknown component type: ${type}`);
+      }
+
+      const component = new ComponentClass() as Component;
+
+      component.setProperties(this.builderProperties);
+      component.effects = this.effects;
+
+      return component as T;
+    }
   };
+
+  protected id: string = generateId();
+  public getId = (): string => this.id;
 
   protected type: ComponentType = ComponentType.Unknown;
   protected effects: Effect[] = [];
@@ -70,8 +98,35 @@ export abstract class Component {
       properties: this.getProperties(),
       effects: effects,
       subComponents: subComponents,
+      id: this.id,
     };
   }
+
+  public static fromJSON<T extends Component>(json: any): T {
+    const ComponentClass = typeToClass[json.type as ComponentType];
+
+    if (!ComponentClass) {
+      throw new Error(`Unknown component type: ${json.type}`);
+    }
+
+    const component = new ComponentClass() as Component;
+
+    component.id = json.id;
+    component.setProperties(json.properties);
+    component.effects = json.effects.map((effect: any) => Effect.fromJSON(effect));
+    component.subComponents = new Map(
+      Object.entries(json.subComponents).map(([name, subComponent]: [string, any]) => [
+        name,
+        Component.fromJSON(subComponent),
+      ])
+    );
+
+    component.setJSONProperties(json);
+
+    return component as T;
+  }
+
+  protected setJSONProperties(json: any): void {}
 
   protected setProperties(properties: ComponentProperties) {
     this.properties = dumbDeepCopy(properties);
@@ -88,7 +143,7 @@ export abstract class Component {
   public applyEffects(context: CanvasRenderingContext2D, frame: number) {
     let properties = this.getProperties();
 
-    for (const effect of this.effects) {
+    for (const effect of this.effects.values()) {
       properties = effect.apply(context, frame, properties);
     }
 
@@ -117,6 +172,10 @@ export abstract class Component {
 
   protected getSubComponent<T extends Component>(name: string): T {
     return this.subComponents.get(name) as T;
+  }
+
+  public getEffect<T extends Effect>(id: string): T {
+    return this.effects.find((effect) => effect.getId() === id) as T;
   }
 
   protected abstract drawComponent(

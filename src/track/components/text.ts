@@ -33,18 +33,8 @@ export class Text extends Component {
       this.setProperty<TextProperties>("fontSettings", fontSettings);
     public withText = (text: string): this => this.setProperty<TextProperties>("text", text);
 
-    public build(): Text {
-      const component = new Text();
-
-      component.setProperties(this.builderProperties);
-      component.effects = this.effects;
-
-      return component;
-    }
+    public build = (): Text => super.buildComponent(ComponentType.Text);
   };
-  private constructor() {
-    super();
-  }
 
   protected type = ComponentType.Text;
   protected override properties: TextProperties = dumbDeepCopy(defaultTextProperties);

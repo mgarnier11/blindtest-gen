@@ -23,18 +23,8 @@ export class Rectangle extends Component {
     public withSize = (size: Size): this => this.setProperty<RectangleProperties>("size", size);
     public withCorners = (corners: Corners): this => this.setProperty<RectangleProperties>("corners", corners);
 
-    public build(): Rectangle {
-      const component = new Rectangle();
-
-      component.setProperties(this.builderProperties);
-      component.effects = this.effects;
-
-      return component;
-    }
+    public build = (): Rectangle => super.buildComponent(ComponentType.Rectangle);
   };
-  private constructor() {
-    super();
-  }
 
   protected type = ComponentType.Rectangle;
   protected override properties: RectangleProperties = dumbDeepCopy(defaultRectangleProperties);

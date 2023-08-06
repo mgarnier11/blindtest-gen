@@ -26,18 +26,8 @@ export class RectangleBorder extends Component {
     public withWidth = (width: number): this => this.setProperty<RectangleBorderProperties>("width", width);
     public withCorners = (corners: Corners): this => this.setProperty<RectangleBorderProperties>("corners", corners);
 
-    public build(): RectangleBorder {
-      const component = new RectangleBorder();
-
-      component.setProperties(this.builderProperties);
-      component.effects = this.effects;
-
-      return component;
-    }
+    public build = (): RectangleBorder => super.buildComponent(ComponentType.RectangleBorder);
   };
-  private constructor() {
-    super();
-  }
 
   protected type = ComponentType.RectangleBorder;
   protected override properties: RectangleBorderProperties = dumbDeepCopy(defaultRectangleBorderProperties);

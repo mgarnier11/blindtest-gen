@@ -10,35 +10,45 @@ type BorderAnimationProperties = EffectProperties & {
   nbBorders: number;
 };
 
-export class BorderAnimation extends Effect {
-  constructor(
-    public startFrame: number,
-    public endFrame: number,
-    public borderDelay: number,
-    public nbBorders: number
-  ) {
-    super();
-    this.type = EffectType.BorderAnimation;
-  }
+const defaultBorderAnimationProperties: BorderAnimationProperties = {
+  startFrame: 0,
+  endFrame: 0,
+  borderDelay: 0,
+  nbBorders: 0,
+};
 
-  public override getProperties(): BorderAnimationProperties {
-    return dumbDeepCopy({
-      startFrame: this.startFrame,
-      endFrame: this.endFrame,
-      borderDelay: this.borderDelay,
-      nbBorders: this.nbBorders,
-    });
-  }
+export class BorderAnimation extends Effect {
+  public static Builder = class extends Effect.Builder {
+    builderProperties: BorderAnimationProperties = dumbDeepCopy(defaultBorderAnimationProperties);
+
+    public withStartFrame = (startFrame: number): this =>
+      this.setProperty<BorderAnimationProperties>("startFrame", startFrame);
+    public withEndFrame = (endFrame: number): this => this.setProperty<BorderAnimationProperties>("endFrame", endFrame);
+    public withBorderDelay = (borderDelay: number): this =>
+      this.setProperty<BorderAnimationProperties>("borderDelay", borderDelay);
+    public withNbBorders = (nbBorders: number): this =>
+      this.setProperty<BorderAnimationProperties>("nbBorders", nbBorders);
+
+    public build = (): BorderAnimation => this.buildEffect<BorderAnimation>(EffectType.BorderAnimation);
+  };
+
+  protected type = EffectType.BorderAnimation;
+  protected override properties: BorderAnimationProperties = dumbDeepCopy(defaultBorderAnimationProperties);
 
   public override apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): void {
-    if (actualFrame >= this.startFrame && actualFrame < this.endFrame) {
+    const startFrame = this.properties.startFrame;
+    const endFrame = this.properties.endFrame;
+
+    if (actualFrame >= startFrame && actualFrame < endFrame) {
       const componentSize = getPropertyValue(properties, "size");
       const borderSettings = getPropertyValue(properties, "borderSettings");
-      const animationDuration = this.endFrame - this.startFrame;
-      const borderDuration = animationDuration - this.borderDelay * (this.nbBorders - 1);
+      const animationDuration = endFrame - startFrame;
+      const borderDelay = this.properties.borderDelay;
+      const nbBorders = this.properties.nbBorders;
+      const borderDuration = animationDuration - borderDelay * (nbBorders - 1);
 
-      for (let i = 0; i < this.nbBorders; i++) {
-        const frameDiff = actualFrame - this.startFrame - this.borderDelay * i;
+      for (let i = 0; i < nbBorders; i++) {
+        const frameDiff = actualFrame - startFrame - borderDelay * i;
         if (frameDiff > 0 && frameDiff < borderDuration) {
           context.save();
 

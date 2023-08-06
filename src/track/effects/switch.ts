@@ -7,29 +7,35 @@ type SwitchProperties = EffectProperties & {
   framesToSwitch: number[];
 };
 
-export class Switch extends Effect {
-  constructor(public property: string, public framesToSwitch: number[]) {
-    super();
-    this.type = EffectType.Switch;
-  }
+const defaultSwitchProperties: SwitchProperties = {
+  property: "",
+  framesToSwitch: [],
+};
 
-  public override getProperties(): SwitchProperties {
-    return dumbDeepCopy({
-      property: this.property,
-      framesToSwitch: this.framesToSwitch,
-    });
-  }
+export class Switch extends Effect {
+  public static Builder = class extends Effect.Builder {
+    builderProperties: SwitchProperties = dumbDeepCopy(defaultSwitchProperties);
+
+    public withProperty = (property: string): this => this.setProperty<SwitchProperties>("property", property);
+    public withFramesToSwitch = (framesToSwitch: number[]): this =>
+      this.setProperty<SwitchProperties>("framesToSwitch", framesToSwitch);
+
+    public build = (): Switch => this.buildEffect<Switch>(EffectType.Switch);
+  };
+
+  protected type = EffectType.Switch;
+  protected override properties: SwitchProperties = dumbDeepCopy(defaultSwitchProperties);
 
   public override apply(context: CanvasRenderingContext2D, actualFrame: number, properties: any): void {
-    let propertyValue = getPropertyValue(properties, this.property);
+    let propertyValue = getPropertyValue(properties, this.properties.property);
 
     let framesLessThanActualFrame = 0;
-    for (const frame of this.framesToSwitch) {
+    for (const frame of this.properties.framesToSwitch) {
       if (frame <= actualFrame) framesLessThanActualFrame++;
     }
 
     if (framesLessThanActualFrame % 2 !== 0) {
-      setPropertyValue(properties, this.property, !propertyValue);
+      setPropertyValue(properties, this.properties.property, !propertyValue);
     }
 
     return properties;
