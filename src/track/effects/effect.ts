@@ -12,14 +12,20 @@ export enum EffectType {
 export interface EffectProperties {}
 
 const effectTypeToClass = {
-  [EffectType.BorderAnimation]: (await import("./borderAnimation.js")).BorderAnimation,
-  [EffectType.Switch]: (await import("./switch.js")).Switch,
-  [EffectType.Transition]: (await import("./transition.js")).Transition,
-  [EffectType.Set]: (await import("./set.js")).Set,
   [EffectType.Unknown]: null,
 };
 
 export abstract class Effect {
+  public static typeToClass: any = undefined;
+  public static async setTypeToClass() {
+    Effect.typeToClass = {
+      [EffectType.BorderAnimation]: (await import("./borderAnimation.js")).BorderAnimation,
+      [EffectType.Switch]: (await import("./switch.js")).Switch,
+      [EffectType.Transition]: (await import("./transition.js")).Transition,
+      [EffectType.Set]: (await import("./set.js")).Set,
+    };
+  }
+
   public static defaultEffectProperties: EffectProperties = {};
   public static Builder = class {
     protected builderProperties: EffectProperties = dumbDeepCopy(Effect.defaultEffectProperties);
@@ -35,7 +41,7 @@ export abstract class Effect {
     }
 
     protected buildEffect<T extends Effect>(type: EffectType): T {
-      const EffectClass = effectTypeToClass[type];
+      const EffectClass = Effect.typeToClass[type];
 
       if (!EffectClass) {
         throw new Error(`Unknown effect type: ${type}`);
@@ -72,7 +78,7 @@ export abstract class Effect {
   }
 
   public static fromJSON<T extends Effect>(json: any): T {
-    const EffectClass = effectTypeToClass[json.type as EffectType];
+    const EffectClass = Effect.typeToClass[json.type as EffectType];
 
     if (!EffectClass) {
       throw new Error(`Unknown effect type: ${json.type}`);
@@ -86,3 +92,7 @@ export abstract class Effect {
     return effect as T;
   }
 }
+
+export const registerEffects = async () => {
+  await Effect.setTypeToClass();
+};

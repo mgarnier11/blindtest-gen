@@ -18,6 +18,11 @@ import Ffmpeg from "fluent-ffmpeg";
 import { Switch } from "./track/effects/switch.js";
 import { Rectangle } from "./track/components/rectangle.js";
 import { Effects } from "./track/effects/effects.js";
+import { registerEffects } from "./track/effects/effect.js";
+await registerEffects();
+
+import { registerComponents } from "./track/components/component.js";
+await registerComponents();
 import { Set } from "./track/effects/set.js";
 import { RectangleBorder } from "./track/components/rectangleBorder.js";
 import { Component } from "./track/components/component.js";
@@ -74,6 +79,21 @@ const bar = new ProgressBar.Builder()
   .withBorderSettings({ color: "white", width: 6, corners: 7 })
   .withTransitionType(TransitionType.EASE_IN_OUT)
   .build(framerate);
+
+const countdownTextJSON = countdownText.toJSON();
+const barJSON = bar.toJSON();
+
+const str = JSON.stringify({ countdownTextJSON, barJSON });
+
+const countdownText2 = Text.fromJSON(countdownTextJSON);
+const bar2 = ProgressBar.fromJSON(barJSON);
+
+const countdownText2JSON = countdownText2.toJSON();
+const bar2JSON = bar2.toJSON();
+
+const str2 = JSON.stringify({ countdownTextJSON: countdownText2JSON, barJSON: bar2JSON });
+
+const equal = str === str2;
 
 for (let frame = 1; frame <= framerate * videoDuration; frame++) {
   const canvas = new Canvas(1920, 1080);

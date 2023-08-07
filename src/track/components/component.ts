@@ -23,15 +23,17 @@ export interface ComponentProperties {
   opacity: number;
 }
 
-const typeToClass = {
-  [ComponentType.Rectangle]: Rectangle,
-  [ComponentType.RectangleBorder]: RectangleBorder,
-  [ComponentType.Text]: Text,
-  [ComponentType.ProgressBar]: ProgressBar,
-  [ComponentType.Unknown]: null,
-};
-
 export abstract class Component {
+  public static typeToClass: any = undefined;
+  public static async setTypeToClass() {
+    Component.typeToClass = {
+      [ComponentType.Rectangle]: (await import("./rectangle.js")).Rectangle,
+      [ComponentType.RectangleBorder]: (await import("./rectangleBorder.js")).RectangleBorder,
+      [ComponentType.Text]: (await import("./text.js")).Text,
+      [ComponentType.ProgressBar]: (await import("./progressBar.js")).ProgressBar,
+    };
+  }
+
   public static defaultComponentProperties: ComponentProperties = {
     position: { x: 0, y: 0 },
     display: true,
@@ -62,7 +64,7 @@ export abstract class Component {
     };
 
     protected buildComponent<T extends Component>(type: ComponentType): T {
-      const ComponentClass = typeToClass[type];
+      const ComponentClass = Component.typeToClass[type];
 
       if (!ComponentClass) {
         throw new Error(`Unknown component type: ${type}`);
@@ -103,7 +105,7 @@ export abstract class Component {
   }
 
   public static fromJSON<T extends Component>(json: any): T {
-    const ComponentClass = typeToClass[json.type as ComponentType];
+    const ComponentClass = Component.typeToClass[json.type as ComponentType];
 
     if (!ComponentClass) {
       throw new Error(`Unknown component type: ${json.type}`);
@@ -185,3 +187,7 @@ export abstract class Component {
     ...params: any
   ): void;
 }
+
+export const registerComponents = async () => {
+  await Component.setTypeToClass();
+};
