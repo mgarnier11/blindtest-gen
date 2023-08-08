@@ -21,6 +21,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "@mgarnier11/video-track": "^0.0.10",
     "canvas": "^2.11.2",
     "d-fi-core": "^1.3.5",
     "dotenv": "^16.3.1",

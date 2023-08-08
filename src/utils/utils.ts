@@ -1,9 +1,3 @@
-import { BorderAnimation } from "../track/effects/borderAnimation.js";
-import { EffectType } from "../track/effects/effect.js";
-import { Set } from "../track/effects/set.js";
-import { Switch } from "../track/effects/switch.js";
-import { Transition } from "../track/effects/transition.js";
-
 export function toBuffer(arrayBuffer: ArrayBuffer) {
   const buffer = Buffer.alloc(arrayBuffer.byteLength);
   const view = new Uint8Array(arrayBuffer);
