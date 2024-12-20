@@ -7,7 +7,7 @@ import {
   VIDEO_HEIGHT,
   VIDEO_WIDTH,
 } from '../types/constants';
-import { MusicQuestion, MusicQuestionProps } from './components/MusicQuestion';
+import { defaultMusicQuestionProps, MusicQuestion } from './components/MusicQuestion';
 import { ProgressBar, ProgressBarProps } from './components/ProgressBar';
 import { Main } from './MyComp/Main';
 import { NextLogo } from './MyComp/NextLogo';
@@ -39,10 +39,10 @@ export const RemotionRoot: React.FC = () => {
         id='MusicQuestion'
         component={MusicQuestion}
         durationInFrames={45 * 30}
-        fps={30}
+        fps={60}
         width={1920}
         height={1080}
-        defaultProps={MusicQuestionProps.parse({})}
+        defaultProps={defaultMusicQuestionProps}
       />
       <Composition
         id='ProgressBar'

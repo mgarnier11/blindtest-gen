@@ -1,5 +1,5 @@
 import React from 'react';
-import { Easing, interpolate, useCurrentFrame } from 'remotion';
+import { interpolate, useCurrentFrame } from 'remotion';
 import { z } from 'zod';
 
 export const ProgressBarProps = z.object({
@@ -36,11 +36,8 @@ export const ProgressBar: React.FC<z.infer<typeof ProgressBarProps>> = ({
 }) => {
   const frame = useCurrentFrame();
 
-  console.log(color, backgroundColor, margin, height, borderColor, borderWidth, startFrame, endFrame);
-
   // Calculate the progress percentage based on the current frame
   const progress = interpolate(frame, [startFrame, endFrame], [0, 100], {
-    easing: Easing.inOut(Easing.ease),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
