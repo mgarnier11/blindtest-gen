@@ -1,5 +1,4 @@
-import { Composition } from "remotion";
-import { Main } from "./MyComp/Main";
+import { Composition } from 'remotion';
 import {
   COMP_NAME,
   defaultMyCompProps,
@@ -7,8 +6,11 @@ import {
   VIDEO_FPS,
   VIDEO_HEIGHT,
   VIDEO_WIDTH,
-} from "../types/constants";
-import { NextLogo } from "./MyComp/NextLogo";
+} from '../types/constants';
+import { MusicQuestion, MusicQuestionProps } from './components/MusicQuestion';
+import { ProgressBar, ProgressBarProps } from './components/ProgressBar';
+import { Main } from './MyComp/Main';
+import { NextLogo } from './MyComp/NextLogo';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -23,7 +25,7 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={defaultMyCompProps}
       />
       <Composition
-        id="NextLogo"
+        id='NextLogo'
         component={NextLogo}
         durationInFrames={300}
         fps={30}
@@ -32,6 +34,24 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           outProgress: 0,
         }}
+      />
+      <Composition
+        id='MusicQuestion'
+        component={MusicQuestion}
+        durationInFrames={45 * 30}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={MusicQuestionProps.parse({})}
+      />
+      <Composition
+        id='ProgressBar'
+        component={ProgressBar}
+        durationInFrames={600}
+        fps={30}
+        width={500}
+        height={150}
+        defaultProps={ProgressBarProps.parse({ startFrame: 150, endFrame: 450 })}
       />
     </>
   );
